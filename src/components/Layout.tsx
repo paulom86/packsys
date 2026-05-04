@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import mascote from '../assets/mascote.png';
 import {
   LayoutDashboard,
   List,
@@ -82,6 +83,14 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="px-4 py-3 flex justify-center">
+          <img
+            src={mascote}
+            alt="Mascote PackSys"
+            className="w-44 object-contain drop-shadow-lg"
+          />
+        </div>
 
         <div className="p-4 border-t border-slate-700">
           <p className="text-[10px] text-slate-500 text-center">PackSys Industrial v1.0</p>
