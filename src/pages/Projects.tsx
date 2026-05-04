@@ -11,7 +11,7 @@ const emptyProject: Omit<Project, 'id'> = {
   volumeProducaoDia: '', turnos: '', horasTrabalhadasDia: '', carrosHora: '',
   engEmbalagem: '', supplyChain: '', comentariosENGE: '', comentariosSC: '',
   dataInicio: '', mpt: '', sop: '', coeficiente: '',
-  imagemProduto: '', imagemCliente: '', status: 'Ativo',
+  imagemProduto: '', imagemCliente: '', logoEmpresa: '', status: 'Ativo',
 };
 
 export default function Projects() {
@@ -61,7 +61,7 @@ export default function Projects() {
     setActiveId(id);
   };
 
-  const handleImage = (field: 'imagemProduto' | 'imagemCliente', file: File) => {
+  const handleImage = (field: 'imagemProduto' | 'imagemCliente' | 'logoEmpresa', file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       setForm((f) => ({ ...f, [field]: e.target?.result as string }));
@@ -178,6 +178,13 @@ export default function Projects() {
                 <label className="block text-xs font-medium text-slate-600 mb-1">Imagem do Cliente</label>
                 <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImage('imagemCliente', e.target.files[0])} className="text-sm" />
                 {form.imagemCliente && <img src={form.imagemCliente} alt="" className="mt-2 w-16 h-16 rounded object-cover" />}
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Logo da Empresa (LPDS)</label>
+                <p className="text-xs text-slate-400 mb-1">Aparece no cabeçalho do LPDS gerado</p>
+                <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleImage('logoEmpresa', e.target.files[0])} className="text-sm" />
+                {form.logoEmpresa && <img src={form.logoEmpresa} alt="" className="mt-2 h-10 object-contain rounded border border-gray-200 p-1" />}
               </div>
             </div>
 
