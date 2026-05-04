@@ -10,16 +10,38 @@ const COMMODITIES: Commodity[] = ['CC', 'IP', 'BPFR', 'BPRR', 'SPOILER', 'TAILGA
 const emptyItem: Item = {
   id: '',
   partNumber: '', partName: '', projeto: '', cliente: '', commodity: 'CC',
-  fornecedor: '', codFornecedor: '',
+  fornecedor: '', codFornecedor: '', validForPlant: '', documentVersion: '1', startOfUse: '',
   buyMake: 'Buy', instructionFor: 'Production', nacionalImportado: 'Nacional',
   n1: false, n0: false, reposicao: false, consignacao: false, carryOver: false,
+  // consumo
+  dailyConsumption: '', partUnit: 'Part', moq: '', deliveryFrequency: '', orderLotSize: '',
+  returnFrequency: '', boxLabelQty: '', totalPU: '', totalPackagingLoop: '', packagingStockSupplier: '',
+  calculationBased: '',
+  // packaging data
+  serialPackaging: 'Cardboard', reusablePackaging: false, rentedPackaging: false,
+  rentalCompany: '', mixedPallet: false,
+  // peça
   comprimento: '', largura: '', altura: '', peso: '', pecasPorCarro: '',
+  // PU
   puCode: '', puDesc: '', puMaterial: '', puTipo: '',
-  puMedC: '', puMedL: '', puMedA: '', puPeso: '', pecasPorPU: '', brutoPU: '',
-  huMedC: '', huMedL: '', huMedA: '', huPeso: '', puPorCamada: '', camadas: '',
-  empilhavel: false, retornavel: false,
+  puMedC: '', puMedL: '', puMedA: '', puPeso: '', puPesoBruto: '', pecasPorPU: '', brutoPU: '',
+  // HU
+  huMedC: '', huMedL: '', huMedA: '', huPeso: '', huPesoBruto: '', puPorCamada: '', camadas: '',
+  empilhavel: false, empilhavelStatic: '', empilhavelDynamic: '', foldableRatio: '', retornavel: false,
+  // Cover HU
+  coverHUCode: '', coverHUDesc: '', coverHUMedC: '', coverHUMedL: '', coverHUMedA: '', coverHUPeso: '',
+  // Dunnage 1
+  dun1Code: '', dun1Desc: '', dun1MedC: '', dun1MedL: '', dun1MedA: '', dun1Peso: '', dun1QtyPerPU: '', dun1QtyPerHU: '',
+  // Dunnage 2
+  dun2Code: '', dun2Desc: '', dun2MedC: '', dun2MedL: '', dun2MedA: '', dun2Peso: '', dun2QtyPerPU: '', dun2QtyPerHU: '',
+  // Dunnage 3
+  dun3Code: '', dun3Desc: '', dun3MedC: '', dun3MedL: '', dun3MedA: '', dun3Peso: '', dun3QtyPerPU: '', dun3QtyPerHU: '',
+  // transporte
   truckComprimento: '', truckLargura: '', freteViagem: '',
+  // imagens
   imagemPart: '', imagemPU: '', imagemHU: '', imagemDunnage: '',
+  // remarks
+  remarks: '', backupRemarks: '',
   status: 'Pendente',
 };
 
@@ -284,9 +306,103 @@ export default function Cadastro() {
           </div>
         </div>
 
-        {/* 7. Imagens */}
+        {/* 7. Dados do documento LPDS */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className={sectionTitle}>7. Imagens da LPDS</h2>
+          <h2 className={sectionTitle}>7. Dados do Documento LPDS</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div><label className={labelCls}>Versão do Documento</label><input className={inputCls} value={form.documentVersion} onChange={(e) => update('documentVersion', e.target.value)} placeholder="v1" /></div>
+            <div><label className={labelCls}>Start of Use / Data</label><input className={inputCls} value={form.startOfUse} onChange={(e) => update('startOfUse', e.target.value)} placeholder="2024" /></div>
+            <div><label className={labelCls}>Valid for Faurecia Plant</label><input className={inputCls} value={form.validForPlant} onChange={(e) => update('validForPlant', e.target.value)} placeholder="FMM GOIANA - PE" /></div>
+            <div><label className={labelCls}>Part Unit</label><input className={inputCls} value={form.partUnit} onChange={(e) => update('partUnit', e.target.value)} placeholder="Part" /></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <div><label className={labelCls}>Consumo Diário</label><input className={inputCls} value={form.dailyConsumption} onChange={(e) => update('dailyConsumption', e.target.value)} /></div>
+            <div><label className={labelCls}>Serial Packaging</label><input className={inputCls} value={form.serialPackaging} onChange={(e) => update('serialPackaging', e.target.value)} placeholder="Cardboard" /></div>
+            <div><label className={labelCls}>Total Packaging Loop (days)</label><input className={inputCls} value={form.totalPackagingLoop} onChange={(e) => update('totalPackagingLoop', e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <div><label className={labelCls}>Packaging Stock at Supplier (days)</label><input className={inputCls} value={form.packagingStockSupplier} onChange={(e) => update('packagingStockSupplier', e.target.value)} /></div>
+            <div><label className={labelCls}>Total Number of PU</label><input className={inputCls} value={form.totalPU} onChange={(e) => update('totalPU', e.target.value)} /></div>
+            <div><label className={labelCls}>Box Label Qty / PU</label><input className={inputCls} value={form.boxLabelQty} onChange={(e) => update('boxLabelQty', e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-4">
+            <div><label className={labelCls}>MOQ (Minimum Order Qty)</label><input className={inputCls} value={form.moq} onChange={(e) => update('moq', e.target.value)} /></div>
+            <div><label className={labelCls}>Delivery Frequency (per week)</label><input className={inputCls} value={form.deliveryFrequency} onChange={(e) => update('deliveryFrequency', e.target.value)} /></div>
+            <div><label className={labelCls}>Order Lot Size (units)</label><input className={inputCls} value={form.orderLotSize} onChange={(e) => update('orderLotSize', e.target.value)} /></div>
+            <div><label className={labelCls}>Return Frequency (per week)</label><input className={inputCls} value={form.returnFrequency} onChange={(e) => update('returnFrequency', e.target.value)} /></div>
+          </div>
+          <div className="flex flex-wrap gap-6 mt-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.reusablePackaging} onChange={(e) => update('reusablePackaging', e.target.checked)} className="w-4 h-4" /> Reusable Packaging</label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.rentedPackaging} onChange={(e) => update('rentedPackaging', e.target.checked)} className="w-4 h-4" /> Rented Packaging</label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={form.mixedPallet} onChange={(e) => update('mixedPallet', e.target.checked)} className="w-4 h-4" /> Mixed Pallet</label>
+            <div className="flex-1"><label className={labelCls}>Rental Company (se aplicável)</label><input className={inputCls} value={form.rentalCompany} onChange={(e) => update('rentalCompany', e.target.value)} /></div>
+          </div>
+        </div>
+
+        {/* 8. Stackability e Cover HU */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className={sectionTitle}>8. Stackability e Cover for HU</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div><label className={labelCls}>Stackability Static (qty levels)</label><input className={inputCls} value={form.empilhavelStatic} onChange={(e) => update('empilhavelStatic', e.target.value)} /></div>
+            <div><label className={labelCls}>Stackability Dynamic (qty levels)</label><input className={inputCls} value={form.empilhavelDynamic} onChange={(e) => update('empilhavelDynamic', e.target.value)} /></div>
+            <div><label className={labelCls}>Foldable Ratio</label><input className={inputCls} value={form.foldableRatio} onChange={(e) => update('foldableRatio', e.target.value)} /></div>
+            <div><label className={labelCls}>HU Peso Bruto (kg)</label><input className={inputCls} value={form.huPesoBruto} onChange={(e) => update('huPesoBruto', e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+            <div><label className={labelCls}>PU Peso Bruto (kg)</label><input className={inputCls} value={form.puPesoBruto} onChange={(e) => update('puPesoBruto', e.target.value)} /></div>
+          </div>
+          <h3 className="text-xs font-bold text-slate-600 uppercase mt-4 mb-2">Cover for HU</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div><label className={labelCls}>Código</label><input className={inputCls} value={form.coverHUCode} onChange={(e) => update('coverHUCode', e.target.value)} /></div>
+            <div><label className={labelCls}>Descrição</label><input className={inputCls} value={form.coverHUDesc} onChange={(e) => update('coverHUDesc', e.target.value)} /></div>
+            <div><label className={labelCls}>Peso Tara (kg)</label><input className={inputCls} value={form.coverHUPeso} onChange={(e) => update('coverHUPeso', e.target.value)} /></div>
+            <div><label className={labelCls}>Comprimento (mm)</label><input className={inputCls} value={form.coverHUMedC} onChange={(e) => update('coverHUMedC', e.target.value)} /></div>
+            <div><label className={labelCls}>Largura (mm)</label><input className={inputCls} value={form.coverHUMedL} onChange={(e) => update('coverHUMedL', e.target.value)} /></div>
+            <div><label className={labelCls}>Altura (mm)</label><input className={inputCls} value={form.coverHUMedA} onChange={(e) => update('coverHUMedA', e.target.value)} /></div>
+          </div>
+        </div>
+
+        {/* 9. Dunnages */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className={sectionTitle}>9. Dunnages (1, 2 e 3)</h2>
+          {([1, 2, 3] as const).map((n) => {
+            const prefix = `dun${n}` as 'dun1' | 'dun2' | 'dun3';
+            return (
+              <div key={n} className="mb-4">
+                <h3 className="text-xs font-bold text-slate-600 uppercase mb-2">Dunnage {n}</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div><label className={labelCls}>Código</label><input className={inputCls} value={form[`${prefix}Code`]} onChange={(e) => update(`${prefix}Code`, e.target.value)} /></div>
+                  <div><label className={labelCls}>Descrição</label><input className={inputCls} value={form[`${prefix}Desc`]} onChange={(e) => update(`${prefix}Desc`, e.target.value)} /></div>
+                  <div><label className={labelCls}>C (mm)</label><input className={inputCls} value={form[`${prefix}MedC`]} onChange={(e) => update(`${prefix}MedC`, e.target.value)} /></div>
+                  <div><label className={labelCls}>L (mm)</label><input className={inputCls} value={form[`${prefix}MedL`]} onChange={(e) => update(`${prefix}MedL`, e.target.value)} /></div>
+                  <div><label className={labelCls}>A (mm)</label><input className={inputCls} value={form[`${prefix}MedA`]} onChange={(e) => update(`${prefix}MedA`, e.target.value)} /></div>
+                  <div><label className={labelCls}>Peso (kg)</label><input className={inputCls} value={form[`${prefix}Peso`]} onChange={(e) => update(`${prefix}Peso`, e.target.value)} /></div>
+                  <div><label className={labelCls}>Qty / PU</label><input className={inputCls} value={form[`${prefix}QtyPerPU`]} onChange={(e) => update(`${prefix}QtyPerPU`, e.target.value)} /></div>
+                  <div><label className={labelCls}>Qty / HU</label><input className={inputCls} value={form[`${prefix}QtyPerHU`]} onChange={(e) => update(`${prefix}QtyPerHU`, e.target.value)} /></div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* 10. Remarks */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className={sectionTitle}>10. Remarks</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className={labelCls}>Remarks (Página 1)</label>
+              <textarea className={inputCls} rows={3} value={form.remarks} onChange={(e) => update('remarks', e.target.value)} />
+            </div>
+            <div>
+              <label className={labelCls}>Back-up Remarks (Página 2)</label>
+              <textarea className={inputCls} rows={3} value={form.backupRemarks} onChange={(e) => update('backupRemarks', e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        {/* 11. Imagens */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 className={sectionTitle}>11. Imagens da LPDS</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {(['imagemPart', 'imagemPU', 'imagemHU', 'imagemDunnage'] as const).map((field) => (
               <div key={field}>
