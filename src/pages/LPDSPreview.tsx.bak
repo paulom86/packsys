@@ -1,0 +1,419 @@
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Download } from 'lucide-react';
+import { Item } from '../types';
+import { getItems } from '../utils/storage';
+import { calculateFields } from '../utils/calculations';
+
+const BLUE = '#1e3a5f';
+const BORDER = '1px solid #000';
+
+const cell: React.CSSProperties = {
+  border: BORDER,
+  padding: '0.6mm 1mm',
+  fontSize: '7.4px',
+  lineHeight: '1.05',
+  verticalAlign: 'middle',
+  overflow: 'hidden',
+};
+
+const label: React.CSSProperties = {
+  ...cell,
+  background: '#f0f0f0',
+  fontWeight: 700,
+  whiteSpace: 'nowrap',
+};
+
+const value: React.CSSProperties = {
+  ...cell,
+  background: '#fff',
+};
+
+const headerCell: React.CSSProperties = {
+  ...cell,
+  background: BLUE,
+  color: '#fff',
+  fontWeight: 800,
+  textAlign: 'center',
+};
+
+const sectionTitle: React.CSSProperties = {
+  background: BLUE,
+  color: '#fff',
+  fontWeight: 800,
+  textAlign: 'left',
+  padding: '0.9mm 1.2mm',
+  border: BORDER,
+  fontSize: '7.8px',
+  height: '4.2mm',
+  boxSizing: 'border-box',
+};
+
+const pageStyle: React.CSSProperties = {
+  width: '297mm',
+  height: '210mm',
+  padding: '4mm',
+  boxSizing: 'border-box',
+  background: '#fff',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+};
+
+const tableBase: React.CSSProperties = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  tableLayout: 'fixed',
+};
+
+type CalcType = ReturnType<typeof calculateFields> | null;
+
+export default function LPDSPreview() {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const itemId = params.get('item');
+  const [items, setItems] = useState<Item[]>([]);
+  const [selectedId, setSelectedId] = useState<string>(itemId || '');
+  const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const all = getItems();
+    setItems(all);
+    if (!itemId && all.length > 0) setSelectedId(all[0].id);
+  }, [itemId]);
+
+  const item = items.find((i) => i.id === selectedId);
+  const calc = item ? calculateFields(item) : null;
+
+  const handleDownloadPDF = async () => {
+    if (!printRef.current || !item) return;
+    const html2pdf = (await import('html2pdf.js')).default;
+
+    html2pdf()
+      .set({
+        margin: [0, 0, 0, 0],
+        filename: `LPDS_${item.partNumber || 'documento'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+      })
+      .from(printRef.current)
+      .save();
+  };
+
+  if (!item) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-slate-800">LPDS Preview</h1>
+        <p className="text-sm text-slate-400 mt-4">Nenhum item selecionado. Cadastre um item primeiro.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-4 print:hidden">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/items')} className="p-2 text-slate-400 hover:text-slate-700">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">LPDS Preview</h1>
+            <p className="text-sm text-slate-500">{item.partNumber} - {item.partName}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedId}
+            onChange={(e) => setSelectedId(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm"
+          >
+            {items.map((i) => (
+              <option key={i.id} value={i.id}>{i.partNumber} - {i.partName}</option>
+            ))}
+          </select>
+
+          <button onClick={handleDownloadPDF} className="flex items-center gap-2 bg-cyan-600 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+            <Download className="w-4 h-4" /> Baixar PDF
+          </button>
+        </div>
+      </div>
+
+      <div
+        ref={printRef}
+        id="lpds-print-area"
+        style={{
+          fontFamily: 'Arial, Helvetica, sans-serif',
+          background: '#fff',
+          margin: '0 auto',
+          width: '297mm',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+        }}
+      >
+        <PageOne item={item} calc={calc} />
+        <PageTwo item={item} calc={calc} />
+      </div>
+    </div>
+  );
+}
+
+function v(val: unknown) {
+  if (val === null || val === undefined || val === '') return '-';
+  return String(val);
+}
+
+function yesNo(valueToCheck: unknown) {
+  return valueToCheck ? 'Yes' : 'No';
+}
+
+function PageHeader({ title, page }: { title: string; page: string }) {
+  return (
+    <table style={{ ...tableBase, height: '9mm', flex: '0 0 9mm' }}>
+      <tbody>
+        <tr>
+          <td style={{ ...headerCell, width: '12%', textAlign: 'left', fontSize: '7.8px' }}>FORVIA</td>
+          <td style={{ ...headerCell, textAlign: 'left', fontSize: '10px' }}>{title}</td>
+          <td style={{ ...headerCell, width: '12%', textAlign: 'right', fontSize: '7.8px' }}>{page}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <div style={sectionTitle}>{children}</div>;
+}
+
+function Footer() {
+  return (
+    <table style={{ ...tableBase, height: '5mm', flex: '0 0 5mm' }}>
+      <tbody>
+        <tr>
+          <td style={{ borderTop: '1px solid #999', fontSize: '6px', color: '#555', paddingTop: '1mm' }}>
+            Property of Faurecia - Internal Documentation.
+          </td>
+          <td style={{ borderTop: '1px solid #999', fontSize: '6px', color: '#555', paddingTop: '1mm', textAlign: 'right' }}>
+            FAU-F-PSG-2027 - issue 02 - 07/17
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+function PageOne({ item, calc }: { item: Item; calc: CalcType }) {
+  return (
+    <div style={{ ...pageStyle, pageBreakAfter: 'always' }}>
+      <PageHeader title="Packaging Data Sheet - Series" page="(page 1/2)" />
+
+      <div style={{ flex: '0 0 24mm', marginTop: '1mm' }}>
+        <SectionTitle>PART DESCRIPTION</SectionTitle>
+        <table style={{ ...tableBase, height: '19.8mm' }}>
+          <tbody>
+            <tr style={{ height: '4.95mm' }}>
+              <td style={label}>Part Number</td><td style={value}>{v(item.partNumber)}</td>
+              <td style={label}>Part Name</td><td style={value}>{v(item.partName)}</td>
+              <td style={label}>Project / Program</td><td style={value}>{v(item.projeto)}</td>
+              <td style={label}>Customer / OEM</td><td style={value}>{v(item.cliente)}</td>
+            </tr>
+            <tr style={{ height: '4.95mm' }}>
+              <td style={label}>Commodity</td><td style={value}>{v(item.commodity)}</td>
+              <td style={label}>Pcs / Car</td><td style={value}>{v(item.pecasPorCarro)}</td>
+              <td style={label}>Buy / Make</td><td style={value}>{v(item.buyMake)}</td>
+              <td style={label}>Instruction For</td><td style={value}>{v(item.instructionFor)}</td>
+            </tr>
+            <tr style={{ height: '4.95mm' }}>
+              <td style={label}>Nacional / Importado</td><td style={value}>{v(item.nacionalImportado)}</td>
+              <td style={label}>N1</td><td style={value}>{item.n1 ? 'X' : ''}</td>
+              <td style={label}>N0</td><td style={value}>{item.n0 ? 'X' : ''}</td>
+              <td style={label}>Carry Over</td><td style={value}>{item.carryOver ? 'X' : ''}</td>
+            </tr>
+            <tr style={{ height: '4.95mm' }}>
+              <td style={label}>Reposição</td><td style={value}>{item.reposicao ? 'X' : ''}</td>
+              <td style={label}>Consignação</td><td style={value}>{item.consignacao ? 'X' : ''}</td>
+              <td style={label}></td><td style={value}></td>
+              <td style={label}></td><td style={value}></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ flex: '0 0 13mm', marginTop: '1mm' }}>
+        <SectionTitle>SUPPLIER</SectionTitle>
+        <table style={{ ...tableBase, height: '8.8mm' }}>
+          <tbody>
+            <tr>
+              <td style={label}>Supplier Name</td>
+              <td style={{ ...value, width: '40%' }}>{v(item.fornecedor)}</td>
+              <td style={label}>Supplier Code</td>
+              <td style={{ ...value, width: '25%' }}>{v(item.codFornecedor)}</td>
+              <td style={label}></td>
+              <td style={value}></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <MainPackagingTable item={item} calc={calc} />
+      <Pictures item={item} title="Pictures" height="42mm" />
+      <Remarks title="REMARKS" height="18mm" />
+      <Signatures height="23mm" />
+      <Footer />
+    </div>
+  );
+}
+
+function MainPackagingTable({ item, calc }: { item: Item; calc: CalcType }) {
+  const rows = [
+    ['Code', item.partNumber, item.puCode, '-', '-', '-', '-'],
+    ['Description', item.partName, item.puDesc, '-', '-', '-', '-'],
+    ['Material', '-', item.puMaterial, '-', '-', '-', '-'],
+    ['Type', '-', item.puTipo, '-', '-', '-', '-'],
+    ['Length (mm)', item.comprimento, item.puMedC, item.huMedC, '-', '-', '-'],
+    ['Width (mm)', item.largura, item.puMedL, item.huMedL, '-', '-', '-'],
+    ['Height (mm)', item.altura, item.puMedA, item.huMedA, '-', '-', '-'],
+    ['Weight (g)', item.peso, item.puPeso, item.huPeso, '-', '-', '-'],
+    ['Pcs / PU', '-', item.pecasPorPU, '-', '-', '-', '-'],
+    ['Gross Weight PU (g)', '-', item.brutoPU, '-', '-', '-', '-'],
+    ['PU / Layer', '-', '-', item.puPorCamada, '-', '-', '-'],
+    ['Layers', '-', '-', item.camadas, '-', '-', '-'],
+    ['PU / HU', '-', '-', calc?.puPorHU || '-', '-', '-', '-'],
+    ['Pcs / HU', '-', '-', calc?.pecasPorHU || '-', '-', '-', '-'],
+    ['Stackable', '-', '-', yesNo(item.empilhavel), '-', '-', '-'],
+    ['Returnable', '-', '-', yesNo(item.retornavel), '-', '-', '-'],
+  ];
+
+  return (
+    <div style={{ flex: '0 0 78mm', marginTop: '1mm' }}>
+      <table style={{ ...tableBase, height: '78mm' }}>
+        <thead>
+          <tr style={{ height: '5mm' }}>
+            <th style={{ ...headerCell, width: '16%' }}></th>
+            <th style={{ ...headerCell, width: '14%' }}>Part</th>
+            <th style={{ ...headerCell, width: '14%' }}>Packaging Unit = PU</th>
+            <th style={{ ...headerCell, width: '14%' }}>Handling Unit = HU</th>
+            <th style={{ ...headerCell, width: '14%' }}>Dunnage 1</th>
+            <th style={{ ...headerCell, width: '14%' }}>Dunnage 2</th>
+            <th style={{ ...headerCell, width: '14%' }}>Dunnage 3</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={String(r[0])} style={{ height: '4.56mm' }}>
+              <td style={label}>{r[0]}</td>
+              {r.slice(1).map((c, index) => <td key={index} style={value}>{v(c)}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Pictures({ item, title, height }: { item: Item; title: string; height: string }) {
+  const images = [item.imagemPart, item.imagemPU, item.imagemHU, item.imagemDunnage, '', ''];
+
+  return (
+    <div style={{ flex: `0 0 ${height}`, marginTop: '1mm' }}>
+      <table style={{ ...tableBase, height }}>
+        <thead>
+          <tr style={{ height: '5mm' }}>
+            <th style={{ ...headerCell, width: '16%' }}></th>
+            <th style={{ ...headerCell, width: '14%' }}>Part</th>
+            <th style={{ ...headerCell, width: '14%' }}>PU</th>
+            <th style={{ ...headerCell, width: '14%' }}>HU</th>
+            <th style={{ ...headerCell, width: '14%' }}>Dunnage 1</th>
+            <th style={{ ...headerCell, width: '14%' }}>Dunnage 2</th>
+            <th style={{ ...headerCell, width: '14%' }}>Dunnage 3</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style={{ ...label, verticalAlign: 'middle' }}>{title}</td>
+            {images.map((img, idx) => (
+              <td key={idx} style={{ ...value, textAlign: 'center', verticalAlign: 'middle' }}>
+                {img ? <img src={img} alt="" style={{ maxHeight: '34mm', maxWidth: '100%', objectFit: 'contain' }} /> : <span style={{ color: '#ddd' }}>-</span>}
+              </td>
+            ))}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Remarks({ title, height }: { title: string; height: string }) {
+  return (
+    <div style={{ flex: `0 0 ${height}`, marginTop: '1mm' }}>
+      <SectionTitle>{title}</SectionTitle>
+      <div style={{ borderLeft: BORDER, borderRight: BORDER, borderBottom: BORDER, height: `calc(${height} - 4.2mm)`, boxSizing: 'border-box', background: '#fff' }} />
+    </div>
+  );
+}
+
+function Signatures({ height }: { height: string }) {
+  return (
+    <div style={{ flex: `0 0 ${height}`, marginTop: '1mm' }}>
+      <SectionTitle>SIGNATURES</SectionTitle>
+      <table style={{ ...tableBase, height: `calc(${height} - 4.2mm)` }}>
+        <tbody>
+          <tr style={{ height: '5mm' }}>
+            <td style={{ ...label, width: '33.33%' }}>Supplier</td>
+            <td style={{ ...label, width: '33.33%' }}>ENG Packaging</td>
+            <td style={{ ...label, width: '33.33%' }}>Supply Chain</td>
+          </tr>
+          <tr>
+            <td style={value}></td>
+            <td style={value}></td>
+            <td style={value}></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function PageTwo({ item, calc }: { item: Item; calc: CalcType }) {
+  return (
+    <div style={pageStyle}>
+      <PageHeader title="Packaging Data Sheet - Back up" page="(page 2/2)" />
+
+      <div style={{ flex: '0 0 25mm', marginTop: '1mm' }}>
+        <SectionTitle>BACK-UP PACKAGING DATA</SectionTitle>
+        <table style={{ ...tableBase, height: '20.8mm' }}>
+          <tbody>
+            <tr style={{ height: '6.9mm' }}>
+              <td style={label}>Truck Length (mm)</td><td style={value}>{v(item.truckComprimento)}</td>
+              <td style={label}>Truck Width (mm)</td><td style={value}>{v(item.truckLargura)}</td>
+              <td style={label}>Freight / Trip (R$)</td><td style={value}>{v(item.freteViagem)}</td>
+              <td style={label}>HU / Truck</td><td style={value}>{calc?.huPorCaminhao || '-'}</td>
+            </tr>
+            <tr style={{ height: '6.9mm' }}>
+              <td style={label}>Pcs / Truck</td><td style={value}>{calc?.pecasPorCaminhao || '-'}</td>
+              <td style={label}>Cost / Piece (R$)</td><td style={value}>{calc ? calc.custoPorPeca.toFixed(4) : '-'}</td>
+              <td style={label}>Total Weight HU (g)</td><td style={value}>{calc ? calc.pesoTotalHU.toFixed(1) : '-'}</td>
+              <td style={label}>Total Height (mm)</td><td style={value}>{calc ? calc.alturaTotal.toFixed(1) : '-'}</td>
+            </tr>
+            <tr style={{ height: '6.9mm' }}>
+              <td style={label}>HU / Line</td><td style={value}>{calc?.huPorLinha || '-'}</td>
+              <td style={label}>HU / Length</td><td style={value}>{calc?.huPorComprimento || '-'}</td>
+              <td style={label}></td><td style={value}></td>
+              <td style={label}></td><td style={value}></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style={{ flex: '0 0 54mm', marginTop: '1mm' }}>
+        <Pictures item={item} title="Back-up Pictures" height="54mm" />
+      </div>
+
+      <Remarks title="BACK-UP REMARKS" height="27mm" />
+      <Signatures height="32mm" />
+
+      <div style={{ flex: '1 1 auto' }} />
+      <Footer />
+    </div>
+  );
+}
