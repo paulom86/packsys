@@ -696,6 +696,8 @@ export default function LPDSPreview() {
   const [selectedId, setSelectedId] = useState<string>(itemId || '');
   const [projects, setProjects] = useState<Project[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
+  const page1Ref = useRef<HTMLDivElement>(null);
+  const page2Ref = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
@@ -712,21 +714,34 @@ export default function LPDSPreview() {
   const logo = linkedProject?.logoEmpresa || '';
 
   const handleDownloadPDF = async () => {
-    if (!printRef.current || !item) return;
+    if (!page1Ref.current || !page2Ref.current || !item) return;
     setExporting(true);
     try {
-      const html2pdf = (await import('html2pdf.js')).default;
-      await html2pdf()
-        .set({
-          margin: [0, 0, 0, 0],
-          filename: `LPDS_${item.partNumber || 'documento'}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 1123 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-          pagebreak: { mode: ['css', 'legacy'], before: '.lpds-pb' },
-        })
-        .from(printRef.current)
-        .save();
+      const [{ default: html2pdf }, { default: jsPDF }] = await Promise.all([
+        import('html2pdf.js'),
+        import('jspdf'),
+      ]);
+
+      const OPT = {
+        margin: [0, 0, 0, 0],
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 1123 },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'landscape' as const },
+      };
+
+      // captura página 1
+      const pdf1 = await html2pdf().set(OPT).from(page1Ref.current).outputPdf('arraybuffer');
+      // captura página 2
+      const pdf2 = await html2pdf().set(OPT).from(page2Ref.current).outputPdf('arraybuffer');
+
+      // une as duas num único PDF
+      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+      const canvas1 = await html2pdf().set(OPT).from(page1Ref.current).outputImg('dataurl');
+      doc.addImage(canvas1 as string, 'JPEG', 0, 0, 297, 210);
+      doc.addPage();
+      const canvas2 = await html2pdf().set(OPT).from(page2Ref.current).outputImg('dataurl');
+      doc.addImage(canvas2 as string, 'JPEG', 0, 0, 297, 210);
+      doc.save(`LPDS_${item.partNumber || 'documento'}.pdf`);
     } finally {
       setExporting(false);
     }
@@ -782,11 +797,11 @@ export default function LPDSPreview() {
       {/* Print area */}
       <div ref={printRef} id="lpds-print-area"
         style={{ fontFamily: FONT, background: '#d0d0d0', margin: '0 auto', width: '297mm', display: 'flex', flexDirection: 'column', gap: '5mm' }}>
-        <div style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+        <div ref={page1Ref} style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
           <PageOne item={item} calc={calc} logo={logo} />
         </div>
         <div className="lpds-pb" style={{ height: 0, overflow: 'hidden' }} />
-        <div style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
+        <div ref={page2Ref} style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.2)' }}>
           <PageTwo item={item} calc={calc} logo={logo} />
         </div>
       </div>
