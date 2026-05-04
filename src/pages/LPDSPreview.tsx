@@ -256,14 +256,32 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
             <td style={LB}>Package Density (units)</td>
             <td style={VL}></td><td style={VL}>{v(item.pecasPorPU)}</td><td style={VL}>{pu}</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ ...LB, border: BDR, whiteSpace:'normal' }}>Qty dunnages / PU</td>
+            <td style={{ border:'none' }}></td>
+          </tr>
+          {/* Qty dunnages / PU — label à esquerda, valores nas colunas Dunnage */}
+          <tr style={{ height: RH }}>
+            <td style={LB}>Qty dunnages / PU</td>
+            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
+            <td style={VL}>{v(item.dun1QtyPerPU)}</td>
+            <td style={VL}>{v(item.dun2QtyPerPU)}</td>
+            <td style={VL}>{v(item.dun3QtyPerPU)}</td>
+            <td style={{ border:'none' }}></td>
           </tr>
           {/* PU/layer */}
           <tr style={{ height: RH }}>
             <td style={LB}>PU / layer of HU</td>
             <td style={VL}>{v(item.puPorCamada)}</td><td style={VL}></td><td style={VL}></td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ ...LB, border: BDR, whiteSpace:'normal' }}>Qty dunnages / HU</td>
+            <td style={{ border:'none' }}></td>
+          </tr>
+          {/* Qty dunnages / HU — label à esquerda, valores nas colunas Dunnage */}
+          <tr style={{ height: RH }}>
+            <td style={LB}>Qty dunnages / HU</td>
+            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
+            <td style={VL}>{v(item.dun1QtyPerHU)}</td>
+            <td style={VL}>{v(item.dun2QtyPerHU)}</td>
+            <td style={VL}>{v(item.dun3QtyPerHU)}</td>
+            <td style={{ border:'none' }}></td>
           </tr>
           {/* Quantity PU/HU */}
           <tr style={{ height: RH }}>
@@ -389,15 +407,17 @@ function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
             ['Tare Weight (kg)',   v(item.peso),    v(item.puPeso),      v(item.huPeso),      v(item.coverHUPeso), '', ''],
             ['Gross Weight (kg)',  v(item.brutoPU), v(item.puPesoBruto), v(item.huPesoBruto), '', '', ''],
             ['Package Density (units)', '', v(item.pecasPorPU), pu, '', '', ''],
+            ['Qty dunnages / PU',       '', '',                  '', v(item.dun1QtyPerPU), v(item.dun2QtyPerPU), ''],
             ['PU / layer of HU',  v(item.puPorCamada), '', '', '', '', ''],
+            ['Qty dunnages / HU',       '', '',                  '', v(item.dun1QtyPerHU), v(item.dun2QtyPerHU), ''],
             ['Quantity PU / HU',  v(item.puPorCamada), '', pu, '', '', ''],
           ] as string[][]).map((row,ri)=>(
             <tr key={ri} style={{ height:RH }}>
               <td style={LB}>{row[0]}</td>
               {row.slice(1).map((val,ci)=><td key={ci} style={VL}>{val}</td>)}
-              <td style={{ border: ri===7||ri===8 ? BDR:'none',
+              <td style={{ border: ri===1||ri===3 ? 'none':'none',
                 ...LB, whiteSpace:'normal', fontSize:6.5 }}>
-                {ri===7?'Qty dunnages / PU':ri===8?'Qty dunnages / HU':''}
+                {''}
               </td>
             </tr>
           ))}
