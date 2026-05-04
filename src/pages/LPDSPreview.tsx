@@ -6,37 +6,49 @@ import { getItems, getProjects, getActiveProjectId } from '../utils/storage';
 import { calculateFields } from '../utils/calculations';
 
 // ─────────────────────────────────────────────────────
-//  DESIGN TOKENS
+//  A4 landscape @ 96dpi: 297mm = 1122px, 210mm = 794px
+//  Usamos px fixo para garantir layout correto
 // ─────────────────────────────────────────────────────
-const BLUE   = '#1a3a6b';
-const BORDER = '1px solid #000';
-const FONT   = 'Arial, Helvetica, sans-serif';
+const PW = 1122; // page width px
+const PH = 794;  // page height px
+const PAD = 10;  // padding px
 
+const BLUE   = '#1a3a6b';
+const LGRAY  = '#c8c8c8';
+const BLACK  = '#000';
+const BORDER = `1px solid ${BLACK}`;
+const FONT   = 'Arial, Helvetica, sans-serif';
+const FS     = 8;   // base font size px
+const FS_SM  = 7;
+const FS_XS  = 6;
+
+// ─────────────────────────────────────────────────────
+//  ESTILO DA PÁGINA
+// ─────────────────────────────────────────────────────
 const PAGE: React.CSSProperties = {
-  width: '297mm',
-  height: '210mm',
-  padding: '2.5mm 3mm',
+  width: PW,
+  height: PH,
+  padding: PAD,
   boxSizing: 'border-box',
   background: '#fff',
   overflow: 'hidden',
   fontFamily: FONT,
   display: 'flex',
   flexDirection: 'column',
-  gap: '0mm',
+  gap: 2,
 };
 
-// Tabela base — sem gap entre seções
 const T: React.CSSProperties = {
   width: '100%',
   borderCollapse: 'collapse',
   tableLayout: 'fixed',
 };
 
-// ── células ──────────────────────────────────────────
-const base = (extra: React.CSSProperties = {}): React.CSSProperties => ({
+// células
+const cell = (extra: React.CSSProperties = {}): React.CSSProperties => ({
   border: BORDER,
-  padding: '0.3mm 0.7mm',
-  fontSize: '6px',
+  padding: '1px 3px',
+  fontSize: FS_XS,
   lineHeight: '1.2',
   verticalAlign: 'middle',
   overflow: 'hidden',
@@ -44,10 +56,10 @@ const base = (extra: React.CSSProperties = {}): React.CSSProperties => ({
   ...extra,
 });
 
-const LB = base({ background: '#c8c8c8', fontWeight: 700 });
-const VL = base({ background: '#fff' });
-const HD = base({ background: BLUE, color: '#fff', fontWeight: 700, textAlign: 'center', fontSize: '6.2px' });
-const SEC = base({ background: '#000', color: '#fff', fontWeight: 700, textAlign: 'center', fontSize: '6.8px' });
+const LB = cell({ background: LGRAY, fontWeight: 700 });
+const VL = cell({ background: '#fff' });
+const HD = cell({ background: BLUE, color: '#fff', fontWeight: 700, textAlign: 'center', fontSize: FS_SM });
+const SEC = cell({ background: BLACK, color: '#fff', fontWeight: 700, textAlign: 'center', fontSize: FS_SM });
 
 // ─────────────────────────────────────────────────────
 //  HELPERS
@@ -56,20 +68,12 @@ type Calc = ReturnType<typeof calculateFields> | null;
 const v = (x: unknown) => (x === null || x === undefined || x === '') ? '' : String(x);
 
 function Chk({ val }: { val: boolean }) {
-  return <span style={{ fontSize: '9px', lineHeight: 1, fontFamily: 'Arial' }}>{val ? '☑' : '☐'}</span>;
+  return <span style={{ fontSize: 10 }}>{val ? '☑' : '☐'}</span>;
 }
 
 function Footer() {
   return (
-    <div style={{
-      marginTop: 'auto',
-      borderTop: '1px solid #999',
-      paddingTop: '0.3mm',
-      display: 'flex',
-      justifyContent: 'space-between',
-      fontSize: '5px',
-      color: '#666',
-    }}>
+    <div style={{ borderTop: BORDER, paddingTop: 1, display: 'flex', justifyContent: 'space-between', fontSize: 6, color: '#666', marginTop: 'auto' }}>
       <span>Property of Faurecia — Internal Documentation.</span>
       <span>FAU-F-PSG-2027 — issue 02 — 07/17</span>
     </div>
@@ -79,36 +83,31 @@ function Footer() {
 // ─────────────────────────────────────────────────────
 //  CABEÇALHO
 // ─────────────────────────────────────────────────────
-function Header({ title, version, date, logo }: {
-  title: string; version: string; date: string; logo: string;
-}) {
+function Header({ title, version, date, logo }: { title: string; version: string; date: string; logo: string }) {
   return (
-    <table style={{ ...T, marginBottom: '0.4mm' }}>
+    <table style={{ ...T, height: 52 }}>
       <colgroup>
-        <col style={{ width: '25mm' }} />
+        <col style={{ width: 90 }} />
         <col />
-        <col style={{ width: '50mm' }} />
+        <col style={{ width: 180 }} />
       </colgroup>
       <tbody>
-        <tr style={{ height: '9mm' }}>
-          {/* Logo */}
-          <td style={{ ...base({ background: '#fff', textAlign: 'center', padding: '0.5mm' }), border: BORDER }}>
+        <tr style={{ height: 52 }}>
+          <td style={{ ...cell({ background: '#fff', textAlign: 'center', padding: 3 }), border: BORDER }}>
             {logo
-              ? <img src={logo} alt="logo" style={{ maxHeight: '8mm', maxWidth: '23mm', objectFit: 'contain' }} />
-              : <span style={{ fontWeight: 900, fontSize: '9px', color: BLUE }}>·faurecia</span>
+              ? <img src={logo} alt="logo" style={{ maxHeight: 46, maxWidth: 84, objectFit: 'contain' }} />
+              : <span style={{ fontWeight: 900, fontSize: 11, color: BLUE }}>·faurecia</span>
             }
           </td>
-          {/* Título */}
-          <td style={{ ...HD, fontSize: '10px', fontWeight: 900 }}>{title}</td>
-          {/* Versão / Data */}
-          <td style={{ border: BORDER, padding: 0 }}>
-            <table style={{ ...T, height: '9mm' }}>
+          <td style={{ ...HD, fontSize: 13, fontWeight: 900 }}>{title}</td>
+          <td style={{ border: BORDER, padding: 0, verticalAlign: 'top' }}>
+            <table style={{ ...T, height: 52 }}>
               <tbody>
-                <tr style={{ height: '4.5mm' }}>
+                <tr style={{ height: 26 }}>
                   <td style={{ ...LB, width: '55%' }}>Document version</td>
                   <td style={VL}>{version}</td>
                 </tr>
-                <tr style={{ height: '4.5mm' }}>
+                <tr style={{ height: 26 }}>
                   <td style={LB}>Date</td>
                   <td style={VL}>{date}</td>
                 </tr>
@@ -125,139 +124,99 @@ function Header({ title, version, date, logo }: {
 //  PÁGINA 1
 // ─────────────────────────────────────────────────────
 function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string }) {
-  const puPorHU = calc?.puPorHU ?? '';
+  const puPorHU = v(calc?.puPorHU);
+  const ROW_H = 18;
 
   return (
     <div style={PAGE}>
-      <Header
-        title="Packaging Data Sheet - Series (page 1/2)"
-        version={v(item.documentVersion) || 'v1'}
-        date={v(item.startOfUse) || '—'}
-        logo={logo}
-      />
+      <Header title="Packaging Data Sheet - Series (page 1/2)" version={v(item.documentVersion)||'v1'} date={v(item.startOfUse)||'—'} logo={logo} />
 
-      {/* ══ PART DESCRIPTION + SUPPLIER ══════════════════ */}
-      <table style={{ ...T, marginBottom: '0.4mm' }}>
+      {/* ── PART DESCRIPTION + SUPPLIER ── */}
+      <table style={T}>
         <colgroup>
-          {/* Part Description: 6 cols */}
-          <col style={{ width: '12%' }} /><col style={{ width: '16%' }} />
-          <col style={{ width: '8%' }}  /><col style={{ width: '10%' }} />
-          <col style={{ width: '8%' }}  /><col style={{ width: '10%' }} />
-          {/* Supplier: 2 cols */}
-          <col style={{ width: '10%' }} /><col style={{ width: '26%' }} />
+          <col style={{ width: '13%' }} /><col style={{ width: '17%' }} />
+          <col style={{ width: '7%'  }} /><col style={{ width: '9%'  }} />
+          <col style={{ width: '7%'  }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '11%' }} /><col style={{ width: '26%' }} />
         </colgroup>
         <tbody>
-          {/* títulos de seção */}
-          <tr style={{ height: '3.5mm' }}>
-            <td colSpan={6} style={SEC}>Part Description</td>
-            <td colSpan={2} style={SEC}>Supplier</td>
+          <tr><td colSpan={6} style={SEC}>Part Description</td><td colSpan={2} style={SEC}>Supplier</td></tr>
+          <tr style={{ height: ROW_H }}>
+            <td style={LB}>Faurecia part number(s)</td><td style={VL} colSpan={3}>{v(item.partNumber)}</td>
+            <td style={LB}>Program</td><td style={VL}>{v(item.projeto)}</td>
+            <td style={LB}>Supplier name</td><td style={VL}>{v(item.fornecedor)}</td>
           </tr>
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Faurecia part number(s)</td>
-            <td style={VL} colSpan={3}>{v(item.partNumber)}</td>
-            <td style={LB}>Program</td>
-            <td style={VL}>{v(item.projeto)}</td>
-            <td style={LB}>Supplier name</td>
-            <td style={VL}>{v(item.fornecedor)}</td>
+          <tr style={{ height: ROW_H }}>
+            <td style={LB}>Description</td><td style={VL} colSpan={3}>{v(item.partName)}</td>
+            <td style={LB}>Commodity</td><td style={VL}>{v(item.commodity)}</td>
+            <td style={LB}>Supplier code</td><td style={VL}>{v(item.codFornecedor)}</td>
           </tr>
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Description</td>
-            <td style={VL} colSpan={3}>{v(item.partName)}</td>
-            <td style={LB}>Commodity</td>
-            <td style={VL}>{v(item.commodity)}</td>
-            <td style={LB}>Supplier code</td>
-            <td style={VL}>{v(item.codFornecedor)}</td>
-          </tr>
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Daily consumption</td>
-            <td style={VL}>{v(item.dailyConsumption)}</td>
-            <td style={LB}>Part unit</td>
-            <td style={VL}>{v(item.partUnit) || 'Part'}</td>
-            <td style={LB}>Start of use</td>
-            <td style={VL}>{v(item.startOfUse)}</td>
-            <td style={LB}>Valid for Faurecia plant</td>
-            <td style={VL}>{v(item.validForPlant)}</td>
+          <tr style={{ height: ROW_H }}>
+            <td style={LB}>Daily consumption</td><td style={VL}>{v(item.dailyConsumption)}</td>
+            <td style={LB}>Part unit</td><td style={VL}>{v(item.partUnit)||'Part'}</td>
+            <td style={LB}>Start of use</td><td style={VL}>{v(item.startOfUse)}</td>
+            <td style={LB}>Valid for Faurecia plant</td><td style={VL}>{v(item.validForPlant)}</td>
           </tr>
         </tbody>
       </table>
 
-      {/* ══ PACKAGING DATA ═══════════════════════════════ */}
-      <table style={{ ...T, marginBottom: '0.4mm' }}>
+      {/* ── PACKAGING DATA ── */}
+      <table style={T}>
         <colgroup>
-          <col style={{ width: '10%' }} /><col style={{ width: '7%' }} />
-          <col style={{ width: '12%' }} /><col style={{ width: '6%' }} />
-          <col style={{ width: '4%' }} />
-          <col style={{ width: '3.5%' }} /><col style={{ width: '3.5%' }} />
-          <col style={{ width: '13%' }} />
-          <col style={{ width: '3.5%' }} /><col style={{ width: '3.5%' }} />
-          <col style={{ width: '11%' }} /><col style={{ width: '8%' }} />
-          <col style={{ width: '5%' }} /><col style={{ width: '9%' }} />
+          <col style={{ width: '9%' }}  /><col style={{ width: '6%' }}  />
+          <col style={{ width: '11%' }} /><col style={{ width: '5%' }}  />
+          <col style={{ width: '4%' }}  /><col style={{ width: '3%' }}  /><col style={{ width: '3%' }}  />
+          <col style={{ width: '10%' }} /><col style={{ width: '3%' }}  /><col style={{ width: '3%' }}  />
+          <col style={{ width: '10%' }} /><col style={{ width: '7%' }}  />
+          <col style={{ width: '5%' }}  /><col style={{ width: '21%' }} />
         </colgroup>
         <tbody>
-          <tr style={{ height: '3.5mm' }}>
-            <td colSpan={14} style={SEC}>Packaging data</td>
-          </tr>
-          {/* linha 1 */}
-          <tr style={{ height: '3.5mm' }}>
-            <td style={LB}>Serial packaging</td>
-            <td style={VL}>{v(item.serialPackaging)}</td>
-            <td style={LB}>Total packaging loop</td>
-            <td style={VL}>{v(item.totalPackagingLoop)}</td>
+          <tr><td colSpan={14} style={SEC}>Packaging data</td></tr>
+          <tr style={{ height: ROW_H }}>
+            <td style={LB}>Serial packaging</td><td style={VL}>{v(item.serialPackaging)}</td>
+            <td style={LB}>Total packaging loop</td><td style={VL}>{v(item.totalPackagingLoop)}</td>
             <td style={LB}>days</td>
-            <td style={{ ...LB, textAlign: 'center', fontSize: '5.5px' }}>yes</td>
-            <td style={{ ...LB, textAlign: 'center', fontSize: '5.5px' }}>no</td>
+            <td style={{ ...LB, textAlign: 'center', fontSize: FS_XS }}>yes</td>
+            <td style={{ ...LB, textAlign: 'center', fontSize: FS_XS }}>no</td>
             <td style={{ ...LB, textAlign: 'right' }}>Reusable packaging</td>
             <td style={{ ...VL, textAlign: 'center' }}><Chk val={item.reusablePackaging} /></td>
             <td style={{ ...VL, textAlign: 'center' }}><Chk val={!item.reusablePackaging} /></td>
             <td style={LB}>- Delivery frequency</td>
             <td style={VL}>{v(item.deliveryFrequency)}</td>
-            <td style={{ ...LB, fontSize: '5px' }}>per week</td>
+            <td style={{ ...LB, fontSize: FS_XS }}>per week</td>
             <td style={VL}></td>
           </tr>
-          {/* linha 2 */}
-          <tr style={{ height: '3.5mm' }}>
-            <td style={LB}>Back-up packaging</td>
-            <td style={VL}></td>
-            <td style={LB}>Packaging stock at supplier</td>
-            <td style={VL}>{v(item.packagingStockSupplier)}</td>
-            <td style={LB}>days</td>
-            <td style={VL}></td><td style={VL}></td>
+          <tr style={{ height: ROW_H }}>
+            <td style={LB}>Back-up packaging</td><td style={VL}></td>
+            <td style={LB}>Packaging stock at supplier</td><td style={VL}>{v(item.packagingStockSupplier)}</td>
+            <td style={LB}>days</td><td style={VL}></td><td style={VL}></td>
             <td style={{ ...LB, textAlign: 'right' }}>Rented packaging</td>
             <td style={{ ...VL, textAlign: 'center' }}><Chk val={item.rentedPackaging} /></td>
             <td style={{ ...VL, textAlign: 'center' }}><Chk val={!item.rentedPackaging} /></td>
             <td style={LB}>- Return frequency</td>
             <td style={VL}>{v(item.returnFrequency)}</td>
-            <td style={{ ...LB, fontSize: '5px' }}>per week</td>
+            <td style={{ ...LB, fontSize: FS_XS }}>per week</td>
             <td style={VL}></td>
           </tr>
-          {/* linha 3 */}
-          <tr style={{ height: '3.5mm' }}>
-            <td style={LB}>Box label standard</td>
+          <tr style={{ height: ROW_H }}>
+            <td style={LB}>Box label standard</td><td style={VL}></td>
+            <td style={LB}>Total number of PU</td><td style={VL}>{v(item.totalPU)}</td>
             <td style={VL}></td>
-            <td style={LB}>Total number of PU</td>
-            <td style={VL}>{v(item.totalPU)}</td>
-            <td style={VL}></td>
-            <td colSpan={2} style={{ ...LB, textAlign: 'center', fontSize: '5.5px' }}>If "yes", rental company</td>
+            <td colSpan={2} style={{ ...LB, textAlign: 'center', fontSize: FS_XS }}>If "yes", rental company</td>
             <td style={{ ...LB, textAlign: 'right' }}>Mixed pallet</td>
             <td style={{ ...VL, textAlign: 'center' }}><Chk val={item.mixedPallet} /></td>
             <td style={{ ...VL, textAlign: 'center' }}><Chk val={!item.mixedPallet} /></td>
             <td colSpan={4} style={VL}>{v(item.rentalCompany)}</td>
           </tr>
-          {/* linha 4 */}
-          <tr style={{ height: '3.5mm' }}>
-            <td style={LB}>Box label qty / PU</td>
-            <td style={VL}>{v(item.boxLabelQty)}</td>
+          <tr style={{ height: ROW_H }}>
+            <td style={LB}>Box label qty / PU</td><td style={VL}>{v(item.boxLabelQty)}</td>
             <td colSpan={2} style={LB}>Calculation based on:</td>
             <td colSpan={3} style={LB}>Minimum Order Quantity (in units)</td>
             <td style={VL}>{v(item.moq)}</td>
-            <td colSpan={2} style={VL}></td>
-            <td colSpan={2} style={VL}></td>
-            <td colSpan={2} style={VL}></td>
+            <td colSpan={6} style={VL}></td>
           </tr>
-          {/* linha 5 */}
-          <tr style={{ height: '3.5mm' }}>
-            <td style={VL} colSpan={2}></td>
-            <td style={VL} colSpan={2}></td>
+          <tr style={{ height: ROW_H }}>
+            <td colSpan={2} style={VL}></td><td colSpan={2} style={VL}></td>
             <td colSpan={3} style={LB}>Order Lot size (in units)</td>
             <td style={VL}>{v(item.orderLotSize)}</td>
             <td colSpan={6} style={VL}></td>
@@ -265,21 +224,20 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
         </tbody>
       </table>
 
-      {/* ══ TABELA PRINCIPAL — UMA ÚNICA TABELA CONTÍNUA ═ */}
-      <table style={{ ...T, marginBottom: '0.4mm' }}>
+      {/* ── TABELA PRINCIPAL — ÚNICA TABELA CONTÍNUA ── */}
+      <table style={T}>
         <colgroup>
-          <col style={{ width: '12%' }} />   {/* label */}
-          <col style={{ width: '11%' }} />   {/* Part */}
-          <col style={{ width: '11%' }} />   {/* PU */}
-          <col style={{ width: '11%' }} />   {/* HU */}
-          <col style={{ width: '11%' }} />   {/* Dunnage 1 */}
-          <col style={{ width: '11%' }} />   {/* Dunnage 2 */}
-          <col style={{ width: '11%' }} />   {/* Dunnage 3 */}
-          <col style={{ width: '22%' }} />   {/* extras / stackability */}
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '11%' }} />
+          <col style={{ width: '21%' }} />
         </colgroup>
         <tbody>
-          {/* cabeçalho */}
-          <tr style={{ height: '4mm' }}>
+          <tr style={{ height: 22 }}>
             <td style={HD}></td>
             <td style={HD}>Part</td>
             <td style={HD}>Packaging Unit = PU</td>
@@ -289,182 +247,108 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
             <td style={HD}>Dunnage 3</td>
             <td style={{ ...HD, background: '#fff', border: 'none' }}></td>
           </tr>
-          {/* Faurecia part number */}
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Faurecia part number</td>
-            <td style={VL}>{v(item.partNumber)}</td>
-            <td style={VL}>{v(item.puCode)}</td>
-            <td style={VL}>{v(item.huMedC) && v(item.huMedL) && v(item.huMedA) ? `TM${v(item.huMedC)}` : ''}</td>
-            <td style={VL}>{v(item.dun1Code)}</td>
-            <td style={VL}>{v(item.dun2Code)}</td>
-            <td style={VL}>{v(item.dun3Code)}</td>
-            <td style={{ border: 'none' }}></td>
-          </tr>
-          {/* Description */}
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Description</td>
-            <td style={VL}>{v(item.partName)}</td>
-            <td style={VL}>{v(item.puDesc)}</td>
-            <td style={VL}>{v(item.huMedC) && v(item.huMedL) && v(item.huMedA) ? `${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}` : ''}</td>
-            <td style={VL}>{v(item.dun1Desc)}</td>
-            <td style={VL}>{v(item.dun2Desc)}</td>
-            <td style={VL}>{v(item.dun3Desc)}</td>
-            <td style={{ border: 'none' }}></td>
-          </tr>
-          {/* Length */}
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Length (mm)</td>
-            <td style={VL}>{v(item.comprimento)}</td>
-            <td style={VL}>{v(item.puMedC)}</td>
-            <td style={VL}>{v(item.huMedC)}</td>
-            <td style={VL}>{v(item.dun1MedC)}</td>
-            <td style={VL}>{v(item.dun2MedC)}</td>
-            <td style={VL}>{v(item.dun3MedC)}</td>
-            <td style={{ border: 'none' }}></td>
-          </tr>
-          {/* Width */}
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Width (mm)</td>
-            <td style={VL}>{v(item.largura)}</td>
-            <td style={VL}>{v(item.puMedL)}</td>
-            <td style={VL}>{v(item.huMedL)}</td>
-            <td style={VL}>{v(item.dun1MedL)}</td>
-            <td style={VL}>{v(item.dun2MedL)}</td>
-            <td style={VL}>{v(item.dun3MedL)}</td>
-            <td style={{ border: 'none' }}></td>
-          </tr>
-          {/* Height */}
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Height (mm)</td>
-            <td style={VL}>{v(item.altura)}</td>
-            <td style={VL}>{v(item.puMedA)}</td>
-            <td style={VL}>{v(item.huMedA)}</td>
-            <td style={VL}>{v(item.dun1MedA)}</td>
-            <td style={VL}>{v(item.dun2MedA)}</td>
-            <td style={VL}>{v(item.dun3MedA)}</td>
-            <td style={{ border: 'none' }}></td>
-          </tr>
-          {/* Tare Weight */}
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Tare Weight (kg)</td>
-            <td style={VL}>{v(item.peso)}</td>
-            <td style={VL}>{v(item.puPeso)}</td>
-            <td style={VL}>{v(item.huPeso)}</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ border: 'none' }}></td>
-          </tr>
-          {/* Gross Weight */}
-          <tr style={{ height: '3.8mm' }}>
-            <td style={LB}>Gross Weight (kg)</td>
-            <td style={VL}>{v(item.brutoPU)}</td>
-            <td style={VL}>{v(item.puPesoBruto)}</td>
-            <td style={VL}>{v(item.huPesoBruto)}</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ border: 'none' }}></td>
-          </tr>
+          {[
+            ['Faurecia part number', v(item.partNumber), v(item.puCode), v(item.huMedC)?`TM${v(item.huMedC)}`:'', v(item.dun1Code), v(item.dun2Code), v(item.dun3Code), ''],
+            ['Description',          v(item.partName),   v(item.puDesc), v(item.huMedC)&&v(item.huMedL)&&v(item.huMedA)?`${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}`:'', v(item.dun1Desc), v(item.dun2Desc), v(item.dun3Desc), ''],
+            ['Length (mm)',           v(item.comprimento),v(item.puMedC), v(item.huMedC), v(item.dun1MedC), v(item.dun2MedC), v(item.dun3MedC), ''],
+            ['Width (mm)',            v(item.largura),    v(item.puMedL), v(item.huMedL), v(item.dun1MedL), v(item.dun2MedL), v(item.dun3MedL), ''],
+            ['Height (mm)',           v(item.altura),     v(item.puMedA), v(item.huMedA), v(item.dun1MedA), v(item.dun2MedA), v(item.dun3MedA), ''],
+            ['Tare Weight (kg)',      v(item.peso),       v(item.puPeso), v(item.huPeso), '',               '',               '',               ''],
+            ['Gross Weight (kg)',     v(item.brutoPU),    v(item.puPesoBruto), v(item.huPesoBruto), '',     '',               '',               ''],
+          ].map(([label, ...vals], ri) => (
+            <tr key={ri} style={{ height: ROW_H }}>
+              <td style={LB}>{label}</td>
+              {vals.map((val, ci) => (
+                <td key={ci} style={ci === 6 ? { border: 'none' } : VL}>{val}</td>
+              ))}
+            </tr>
+          ))}
           {/* Package Density + Qty dunnages/PU */}
-          <tr style={{ height: '3.8mm' }}>
+          <tr style={{ height: ROW_H }}>
             <td style={LB}>Package Density (units)</td>
-            <td style={VL}></td>
-            <td style={VL}>{v(item.pecasPorPU)}</td>
-            <td style={VL}>{calc?.puPorHU ? String(calc.puPorHU) : ''}</td>
+            <td style={VL}></td><td style={VL}>{v(item.pecasPorPU)}</td><td style={VL}>{puPorHU}</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ ...LB, border: BORDER, whiteSpace: 'normal', fontSize: '5.5px' }}>Qty dunnages / PU</td>
+            <td style={{ ...LB, border: BORDER, whiteSpace: 'normal' }}>Qty dunnages / PU</td>
           </tr>
           {/* PU/layer + Qty dunnages/HU */}
-          <tr style={{ height: '3.8mm' }}>
+          <tr style={{ height: ROW_H }}>
             <td style={LB}>PU / layer of HU</td>
-            <td style={VL}>{v(item.puPorCamada)}</td>
-            <td style={VL}></td><td style={VL}></td>
+            <td style={VL}>{v(item.puPorCamada)}</td><td style={VL}></td><td style={VL}></td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ ...LB, border: BORDER, whiteSpace: 'normal', fontSize: '5.5px' }}>Qty dunnages / HU</td>
+            <td style={{ ...LB, border: BORDER, whiteSpace: 'normal' }}>Qty dunnages / HU</td>
           </tr>
           {/* Quantity PU/HU */}
-          <tr style={{ height: '3.8mm' }}>
+          <tr style={{ height: ROW_H }}>
             <td style={LB}>Quantity PU / HU</td>
-            <td style={VL}>{v(item.puPorCamada)}</td>
-            <td style={VL}></td>
-            <td style={VL}>{v(puPorHU)}</td>
+            <td style={VL}>{v(item.puPorCamada)}</td><td style={VL}></td><td style={VL}>{puPorHU}</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
             <td style={{ border: 'none' }}></td>
           </tr>
           {/* Stackability */}
-          <tr style={{ height: '4mm' }}>
-            <td style={{ ...LB, whiteSpace: 'normal', fontSize: '5.5px' }}>Stackability (qty of levels per stack)</td>
+          <tr style={{ height: ROW_H }}>
+            <td style={{ ...LB, whiteSpace: 'normal', fontSize: FS_XS }}>Stackability (qty of levels per stack)</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ border: BORDER, padding: '0.3mm', fontSize: '5.5px', background: '#fff' }}>
+            <td style={{ border: BORDER, padding: 2, fontSize: FS_XS, background: '#fff' }}>
               <div>Static: {v(item.empilhavelStatic)}</div>
               <div>Dynamic: {v(item.empilhavelDynamic)}</div>
             </td>
           </tr>
-          {/* Foldable ratio */}
-          <tr style={{ height: '3.5mm' }}>
+          <tr style={{ height: ROW_H }}>
             <td style={VL} colSpan={6}></td>
-            <td style={{ ...LB, fontSize: '5.5px' }}>Foldable ratio</td>
+            <td style={LB}>Foldable ratio</td>
             <td style={{ ...VL, border: BORDER }}>{v(item.foldableRatio)}</td>
           </tr>
         </tbody>
       </table>
 
-      {/* ══ PICTURES — 4 colunas ══════════════════════════ */}
-      <table style={{ ...T, marginBottom: '0.3mm' }}>
-        <colgroup>
-          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
-          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
-        </colgroup>
-        <tbody>
-          <tr style={{ height: '3.8mm' }}>
-            <td style={HD}>Part</td>
-            <td style={HD}>PU with parts (+ show label location)</td>
-            <td style={HD}>Complete HU with cover (+ show label location)</td>
-            <td style={HD}>Dunnage</td>
-          </tr>
-          <tr style={{ height: '33mm' }}>
-            {[item.imagemPart, item.imagemPU, item.imagemHU, item.imagemDunnage].map((img, i) => (
-              <td key={i} style={{ ...VL, textAlign: 'center', verticalAlign: 'middle', padding: '1mm' }}>
-                {img && <img src={img} alt="" crossOrigin="anonymous"
-                  style={{ maxHeight: '31mm', maxWidth: '100%', objectFit: 'contain', display: 'block', margin: '0 auto' }} />}
-              </td>
-            ))}
-          </tr>
-          <tr style={{ height: '3.5mm' }}>
-            <td colSpan={4} style={SEC}>Pictures</td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* ══ REMARKS ══════════════════════════════════════ */}
-      <table style={{ ...T, marginBottom: '0.3mm' }}>
-        <tbody>
-          <tr style={{ height: '3.5mm' }}><td style={SEC}>Remarks</td></tr>
-          <tr style={{ height: '8mm' }}>
-            <td style={{ ...VL, whiteSpace: 'normal', fontSize: '5.8px', verticalAlign: 'top', padding: '0.5mm 1mm' }}>
-              {v(item.remarks)}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* ══ SIGNATURES — 4 colunas ═══════════════════════ */}
+      {/* ── PICTURES ── */}
       <table style={T}>
         <colgroup>
           <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
           <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
         </colgroup>
         <tbody>
-          <tr style={{ height: '3.5mm' }}>
-            <td colSpan={4} style={SEC}>Signatures</td>
+          <tr style={{ height: 130 }}>
+            {[item.imagemPart, item.imagemPU, item.imagemHU, item.imagemDunnage].map((img, i) => (
+              <td key={i} style={{ ...VL, textAlign: 'center', verticalAlign: 'middle', padding: 3 }}>
+                {img && <img src={img} alt="" crossOrigin="anonymous" style={{ maxHeight: 124, maxWidth: '100%', objectFit: 'contain', display: 'block', margin: '0 auto' }} />}
+              </td>
+            ))}
           </tr>
-          <tr style={{ height: '4mm' }}>
+          <tr><td colSpan={4} style={SEC}>Pictures</td></tr>
+        </tbody>
+      </table>
+
+      {/* ── REMARKS ── */}
+      <table style={T}>
+        <tbody>
+          <tr><td style={SEC}>Remarks</td></tr>
+          <tr style={{ height: 28 }}>
+            <td style={{ ...VL, whiteSpace: 'normal', verticalAlign: 'top', padding: '2px 4px' }}>{v(item.remarks)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* ── SIGNATURES ── */}
+      <table style={T}>
+        <colgroup>
+          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
+          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
+        </colgroup>
+        <tbody>
+          <tr><td colSpan={4} style={SEC}>Signatures</td></tr>
+          <tr style={{ height: 16 }}>
             <td style={LB}>Supplier Logistics</td>
             <td style={LB}>Faurecia plant Logistics</td>
             <td style={LB}>Faurecia plant Quality</td>
-            <td style={{ ...LB, whiteSpace: 'normal', fontSize: '5.5px' }}>Faurecia plant HSE (for new packaging)</td>
+            <td style={{ ...LB, whiteSpace: 'normal', fontSize: FS_XS }}>Faurecia plant HSE (for new packaging)</td>
           </tr>
-          <tr style={{ height: '4mm' }}><td style={{ ...VL, fontSize: '5px' }}>Position</td><td style={{ ...VL, fontSize: '5px' }}>Position</td><td style={{ ...VL, fontSize: '5px' }}>Position</td><td style={{ ...VL, fontSize: '5px' }}>Position</td></tr>
-          <tr style={{ height: '4mm' }}><td style={{ ...VL, fontSize: '5px' }}>Name</td><td style={{ ...VL, fontSize: '5px' }}>Name</td><td style={{ ...VL, fontSize: '5px' }}>Name</td><td style={{ ...VL, fontSize: '5px' }}>Name</td></tr>
-          <tr style={{ height: '4mm' }}><td style={{ ...VL, fontSize: '5px' }}>Date</td><td style={{ ...VL, fontSize: '5px' }}>Date</td><td style={{ ...VL, fontSize: '5px' }}>Date</td><td style={{ ...VL, fontSize: '5px' }}>Date</td></tr>
+          {['Position', 'Name', 'Date'].map(lbl => (
+            <tr key={lbl} style={{ height: 14 }}>
+              {[0,1,2,3].map(i => <td key={i} style={{ ...VL, fontSize: FS_XS }}>{lbl}</td>)}
+            </tr>
+          ))}
         </tbody>
       </table>
 
@@ -477,115 +361,93 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
 //  PÁGINA 2
 // ─────────────────────────────────────────────────────
 function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string }) {
-  const puPorHU = calc?.puPorHU ?? '';
+  const puPorHU = v(calc?.puPorHU);
+  const ROW_H = 18;
 
   return (
     <div style={PAGE}>
-      <Header
-        title="Packaging Data Sheet - Back up (page 2/2)"
-        version={v(item.documentVersion) || 'v1'}
-        date={v(item.startOfUse) || '—'}
-        logo={logo}
-      />
+      <Header title="Packaging Data Sheet - Back up (page 2/2)" version={v(item.documentVersion)||'v1'} date={v(item.startOfUse)||'—'} logo={logo} />
 
-      {/* ══ BACK-UP PACKAGING DATA ══════════════════════ */}
-      <table style={{ ...T, marginBottom: '0.4mm' }}>
+      {/* ── BACK-UP PACKAGING DATA ── */}
+      <table style={T}>
         <colgroup>
-          <col style={{ width: '12%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '10%' }} />   {/* Cover HU */}
-          <col style={{ width: '10%' }} />   {/* Dunnage 1 */}
-          <col style={{ width: '10%' }} />   {/* Dunnage 2 */}
-          <col style={{ width: '18%' }} />   {/* extras */}
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '17%' }} />
         </colgroup>
         <tbody>
-          <tr style={{ height: '3.5mm' }}>
-            <td colSpan={8} style={SEC}>Back-up packaging data</td>
-          </tr>
-          <tr style={{ height: '4mm' }}>
+          <tr><td colSpan={8} style={SEC}>Back-up packaging data</td></tr>
+          <tr style={{ height: 22 }}>
             <td style={HD}></td>
-            <td style={HD}>Part</td>
-            <td style={HD}>Packaging Unit = PU</td>
-            <td style={HD}>Handling Unit = HU</td>
-            <td style={HD}>Cover for HU</td>
-            <td style={HD}>Dunnage 1</td>
-            <td style={HD}>Dunnage 2</td>
+            <td style={HD}>Part</td><td style={HD}>Packaging Unit = PU</td>
+            <td style={HD}>Handling Unit = HU</td><td style={HD}>Cover for HU</td>
+            <td style={HD}>Dunnage 1</td><td style={HD}>Dunnage 2</td>
             <td style={{ ...HD, background: '#fff', border: 'none' }}></td>
           </tr>
           {[
-            ['Faurecia part number', v(item.partNumber), v(item.puCode), v(item.huMedC) ? `TM${v(item.huMedC)}` : '', v(item.coverHUCode), v(item.dun1Code), v(item.dun2Code)],
-            ['Description',         v(item.partName),   v(item.puDesc), v(item.huMedC) ? `${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}` : '', v(item.coverHUDesc), v(item.dun1Desc), v(item.dun2Desc)],
+            ['Faurecia part number', v(item.partNumber), v(item.puCode), v(item.huMedC)?`TM${v(item.huMedC)}`:'', v(item.coverHUCode), v(item.dun1Code), v(item.dun2Code)],
+            ['Description',         v(item.partName),   v(item.puDesc), v(item.huMedC)&&v(item.huMedL)&&v(item.huMedA)?`${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}`:'', v(item.coverHUDesc), v(item.dun1Desc), v(item.dun2Desc)],
             ['Length (mm)',          v(item.comprimento),v(item.puMedC), v(item.huMedC), v(item.coverHUMedC), v(item.dun1MedC), v(item.dun2MedC)],
             ['Width (mm)',           v(item.largura),    v(item.puMedL), v(item.huMedL), v(item.coverHUMedL), v(item.dun1MedL), v(item.dun2MedL)],
             ['Height (mm)',          v(item.altura),     v(item.puMedA), v(item.huMedA), v(item.coverHUMedA), v(item.dun1MedA), v(item.dun2MedA)],
             ['Tare Weight (kg)',     v(item.peso),       v(item.puPeso), v(item.huPeso), v(item.coverHUPeso), '', ''],
             ['Gross Weight (kg)',    v(item.brutoPU),    v(item.puPesoBruto), v(item.huPesoBruto), '', '', ''],
-            ['Package Density (units)', '',             v(item.pecasPorPU), String(puPorHU), '', '', ''],
+            ['Package Density (units)', '',              v(item.pecasPorPU), puPorHU, '', '', ''],
             ['PU / layer of HU',    v(item.puPorCamada),'', '', '', '', ''],
-            ['Quantity PU / HU',    v(item.puPorCamada),'', String(puPorHU), '', '', ''],
+            ['Quantity PU / HU',    v(item.puPorCamada),'', puPorHU, '', '', ''],
           ].map(([label, ...vals], ri) => (
-            <tr key={ri} style={{ height: '3.8mm' }}>
+            <tr key={ri} style={{ height: ROW_H }}>
               <td style={LB}>{label}</td>
               {vals.map((val, ci) => <td key={ci} style={VL}>{val}</td>)}
-              <td style={{ border: ri === 7 ? BORDER : 'none', ...LB, whiteSpace: 'normal', fontSize: '5.5px' }}>
+              <td style={{ border: ri === 7 || ri === 8 ? BORDER : 'none', ...LB, whiteSpace: 'normal', fontSize: FS_XS }}>
                 {ri === 7 ? 'Qty dunnages / PU' : ri === 8 ? 'Qty dunnages / HU' : ''}
               </td>
             </tr>
           ))}
-          {/* Stackability */}
-          <tr style={{ height: '4mm' }}>
-            <td style={{ ...LB, whiteSpace: 'normal', fontSize: '5.5px' }}>Stackability (qty of levels per stack)</td>
+          <tr style={{ height: ROW_H }}>
+            <td style={{ ...LB, whiteSpace: 'normal', fontSize: FS_XS }}>Stackability (qty of levels per stack)</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ border: BORDER, padding: '0.3mm', fontSize: '5.5px', background: '#fff' }}>
+            <td style={{ border: BORDER, padding: 2, fontSize: FS_XS, background: '#fff' }}>
               <div>Static: {v(item.empilhavelStatic)}</div>
               <div>Dynamic: {v(item.empilhavelDynamic)}</div>
             </td>
           </tr>
-          <tr style={{ height: '3.5mm' }}>
-            <td style={VL} colSpan={5}></td>
-            <td style={{ ...LB, fontSize: '5.5px' }}>Foldable ratio</td>
+          <tr style={{ height: ROW_H }}>
+            <td colSpan={5} style={VL}></td>
+            <td style={LB}>Foldable ratio</td>
             <td style={VL}>{v(item.foldableRatio)}</td>
             <td style={{ border: 'none' }}></td>
           </tr>
         </tbody>
       </table>
 
-      {/* ══ BACK-UP PICTURES — 4 colunas ════════════════ */}
-      <table style={{ ...T, marginBottom: '0.3mm' }}>
+      {/* ── BACK-UP PICTURES ── */}
+      <table style={T}>
         <colgroup>
           <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
           <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
         </colgroup>
         <tbody>
-          <tr style={{ height: '3.8mm' }}>
-            <td style={HD}>Part</td>
-            <td style={HD}>PU with parts (+ show label location)</td>
-            <td style={HD}>Complete HU with cover (+ show label location)</td>
-            <td style={HD}>Dunnage</td>
-          </tr>
-          <tr style={{ height: '55mm' }}>
+          <tr style={{ height: 200 }}>
             {[item.imagemPart, item.imagemPU, item.imagemHU, item.imagemDunnage].map((img, i) => (
-              <td key={i} style={{ ...VL, textAlign: 'center', verticalAlign: 'middle', padding: '1mm' }}>
-                {img && <img src={img} alt="" crossOrigin="anonymous"
-                  style={{ maxHeight: '53mm', maxWidth: '100%', objectFit: 'contain', display: 'block', margin: '0 auto' }} />}
+              <td key={i} style={{ ...VL, textAlign: 'center', verticalAlign: 'middle', padding: 3 }}>
+                {img && <img src={img} alt="" crossOrigin="anonymous" style={{ maxHeight: 194, maxWidth: '100%', objectFit: 'contain', display: 'block', margin: '0 auto' }} />}
               </td>
             ))}
           </tr>
-          <tr style={{ height: '3.5mm' }}>
-            <td colSpan={4} style={SEC}>Back-up pictures</td>
-          </tr>
+          <tr><td colSpan={4} style={SEC}>Back-up pictures</td></tr>
         </tbody>
       </table>
 
-      {/* ══ BACK-UP REMARKS ══════════════════════════════ */}
-      <table style={{ ...T, marginBottom: '0.3mm' }}>
+      {/* ── BACK-UP REMARKS ── */}
+      <table style={T}>
         <tbody>
-          <tr style={{ height: '3.5mm' }}><td style={SEC}>Back-up remarks</td></tr>
-          <tr style={{ height: '10mm' }}>
-            <td style={{ ...VL, whiteSpace: 'normal', fontSize: '5.8px', verticalAlign: 'top', padding: '0.5mm 1mm', color: '#555', fontStyle: 'italic' }}>
+          <tr><td style={SEC}>Back-up remarks</td></tr>
+          <tr style={{ height: 36 }}>
+            <td style={{ ...VL, whiteSpace: 'normal', verticalAlign: 'top', padding: '2px 4px', fontSize: FS_XS, fontStyle: 'italic', color: '#555' }}>
               (wrapping, thermo sealed bendings, multi-loop disposable packaging, kit, etc.)
               {v(item.backupRemarks) && <span style={{ color: '#000', fontStyle: 'normal' }}> {v(item.backupRemarks)}</span>}
             </td>
@@ -593,25 +455,25 @@ function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
         </tbody>
       </table>
 
-      {/* ══ SIGNATURES — 4 colunas ═══════════════════════ */}
+      {/* ── SIGNATURES ── */}
       <table style={T}>
         <colgroup>
           <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
           <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
         </colgroup>
         <tbody>
-          <tr style={{ height: '3.5mm' }}>
-            <td colSpan={4} style={SEC}>Signatures</td>
-          </tr>
-          <tr style={{ height: '4mm' }}>
+          <tr><td colSpan={4} style={SEC}>Signatures</td></tr>
+          <tr style={{ height: 16 }}>
             <td style={LB}>Supplier Logistics</td>
             <td style={LB}>Faurecia plant Logistics</td>
             <td style={LB}>Faurecia plant Quality</td>
-            <td style={{ ...LB, whiteSpace: 'normal', fontSize: '5.5px' }}>Faurecia plant HSE (for new packaging)</td>
+            <td style={{ ...LB, whiteSpace: 'normal', fontSize: FS_XS }}>Faurecia plant HSE (for new packaging)</td>
           </tr>
-          <tr style={{ height: '4mm' }}><td style={{ ...VL, fontSize: '5px' }}>Position</td><td style={{ ...VL, fontSize: '5px' }}>Position</td><td style={{ ...VL, fontSize: '5px' }}>Position</td><td style={{ ...VL, fontSize: '5px' }}>Position</td></tr>
-          <tr style={{ height: '4mm' }}><td style={{ ...VL, fontSize: '5px' }}>Name</td><td style={{ ...VL, fontSize: '5px' }}>Name</td><td style={{ ...VL, fontSize: '5px' }}>Name</td><td style={{ ...VL, fontSize: '5px' }}>Name</td></tr>
-          <tr style={{ height: '4mm' }}><td style={{ ...VL, fontSize: '5px' }}>Date</td><td style={{ ...VL, fontSize: '5px' }}>Date</td><td style={{ ...VL, fontSize: '5px' }}>Date</td><td style={{ ...VL, fontSize: '5px' }}>Date</td></tr>
+          {['Position', 'Name', 'Date'].map(lbl => (
+            <tr key={lbl} style={{ height: 14 }}>
+              {[0,1,2,3].map(i => <td key={i} style={{ ...VL, fontSize: FS_XS }}>{lbl}</td>)}
+            </tr>
+          ))}
         </tbody>
       </table>
 
@@ -619,18 +481,6 @@ function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
     </div>
   );
 }
-
-// ─────────────────────────────────────────────────────
-//  PRINT CSS
-// ─────────────────────────────────────────────────────
-const PRINT_CSS = `
-@media print {
-  @page { size: A4 landscape; margin: 0; }
-  body * { visibility: hidden !important; }
-  #lpds-p1, #lpds-p1 *, #lpds-p2, #lpds-p2 * { visibility: visible !important; }
-  #lpds-p1 { position: fixed !important; top: 0; left: 0; }
-}
-`;
 
 // ─────────────────────────────────────────────────────
 //  MAIN
@@ -667,17 +517,14 @@ export default function LPDSPreview() {
         import('html2pdf.js'),
         import('jspdf'),
       ]);
-
       const OPT = {
         margin: [0, 0, 0, 0],
         image: { type: 'jpeg' as const, quality: 0.98 },
-        html2canvas: { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 1123 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
         jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'landscape' as const },
       };
-
       const img1 = await html2pdf().set(OPT).from(page1Ref.current).outputImg('dataurl');
       const img2 = await html2pdf().set(OPT).from(page2Ref.current).outputImg('dataurl');
-
       const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
       doc.addImage(img1 as string, 'JPEG', 0, 0, 297, 210);
       doc.addPage();
@@ -710,10 +557,8 @@ export default function LPDSPreview() {
 
   return (
     <div className="p-6">
-      <style>{PRINT_CSS}</style>
-
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-5 print:hidden">
+      <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/items')} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100">
             <ArrowLeft className="w-5 h-5" />
@@ -735,17 +580,19 @@ export default function LPDSPreview() {
         </div>
       </div>
 
-      {/* Preview area */}
-      <div style={{ fontFamily: FONT, background: '#c8c8c8', margin: '0 auto', width: '297mm', display: 'flex', flexDirection: 'column', gap: '5mm' }}>
-        <div id="lpds-p1" ref={page1Ref} style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.25)' }}>
-          <PageOne item={item} calc={calc} logo={logo} />
-        </div>
-        <div id="lpds-p2" ref={page2Ref} style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.25)' }}>
-          <PageTwo item={item} calc={calc} logo={logo} />
+      {/* Preview — scroll horizontal se necessário */}
+      <div style={{ overflowX: 'auto', background: '#c0c0c0', padding: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: PW }}>
+          <div ref={page1Ref} style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+            <PageOne item={item} calc={calc} logo={logo} />
+          </div>
+          <div ref={page2Ref} style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+            <PageTwo item={item} calc={calc} logo={logo} />
+          </div>
         </div>
       </div>
 
-      <p className="text-xs text-slate-400 mt-3 print:hidden text-center">
+      <p className="text-xs text-slate-400 mt-3 text-center">
         A4 landscape — cada bloco = 1 página do PDF
       </p>
     </div>
