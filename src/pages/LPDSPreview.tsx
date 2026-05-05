@@ -61,21 +61,19 @@ function Footer() {
 // ─────────────────────────────────────────────────────
 // HEADER
 // ─────────────────────────────────────────────────────
-function Header({ title, ver, date, logo }: { title: string; ver: string; date: string; logo: string }) {
+function Header({ title, ver, logo }: { title: string; ver: string; logo: string }) {
+  const now = new Date();
+  const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
   return (
     <table style={{ ...T, marginBottom: 2 }}>
       <colgroup>
-        {/* Logo */}
         <col style={{ width: 88 }} />
-        {/* Título — ocupa o meio */}
         <col />
-        {/* Document version label */}
-        <col style={{ width: 95 }} />
-        {/* Document version value */}
-        <col style={{ width: 80 }} />
+        <col style={{ width: 110 }} />
+        <col style={{ width: 90 }} />
       </colgroup>
       <tbody>
-        {/* Linha 1: Logo | Título | Document version label | value */}
         <tr style={{ height: 33 }}>
           <td rowSpan={2} style={{ ...c(WH, { textAlign: 'center', padding: 3, verticalAlign: 'middle' }), border: BDR }}>
             {logo
@@ -83,13 +81,12 @@ function Header({ title, ver, date, logo }: { title: string; ver: string; date: 
               : <span style={{ fontWeight: 900, fontSize: 12, color: BLUE }}>·faurecia</span>}
           </td>
           <td rowSpan={2} style={{ ...HD, fontSize: 14, fontWeight: 900, textAlign: 'center' }}>{title}</td>
-          <td style={LB}>Document version</td>
-          <td style={VL}>{ver}</td>
+          <td style={{ ...LB, fontSize: 7 }}>Document version</td>
+          <td style={{ ...VL, fontSize: 7 }}>{ver}</td>
         </tr>
-        {/* Linha 2: Date label | value */}
         <tr style={{ height: 17 }}>
-          <td style={LB}>Date</td>
-          <td style={VL}>{date}</td>
+          <td style={{ ...LB, fontSize: 7 }}>Date</td>
+          <td style={{ ...VL, fontSize: 7 }}>{date}</td>
         </tr>
       </tbody>
     </table>
@@ -106,7 +103,7 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
   return (
     <div style={PAGE}>
       <Header title="Packaging Data Sheet - Series (page 1/2)"
-        ver={v(item.documentVersion)||'v1'} date={v(item.startOfUse)||'—'} logo={logo} />
+        ver={v(item.documentVersion)||'V1'} logo={logo} />
 
       {/* PART DESCRIPTION + SUPPLIER */}
       <table style={T}>
@@ -377,7 +374,7 @@ function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
   return (
     <div style={PAGE}>
       <Header title="Packaging Data Sheet - Back up (page 2/2)"
-        ver={v(item.documentVersion)||'v1'} date={v(item.startOfUse)||'—'} logo={logo} />
+        ver={v(item.documentVersion)||'V1'} logo={logo} />
 
       {/* BACK-UP PACKAGING DATA */}
       <table style={T}>
