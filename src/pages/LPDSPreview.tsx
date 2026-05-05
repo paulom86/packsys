@@ -65,79 +65,57 @@ function Header({ title, ver, logo }: { title: string; ver: string; logo: string
   const now = new Date();
   const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
-  // Dimensões fiéis ao original:
-  // Linha 1 (Document version): altura maior ~35px
-  // Linha 2 (Date): altura menor ~15px
-  // Total cabeçalho: ~50px
-  // Coluna direita: label ~110px + valor ~100px
-
   return (
-    <table style={{ ...T, marginBottom: 2, height: 50 }}>
+    <table style={{ ...T, marginBottom: 2 }}>
       <colgroup>
         <col style={{ width: 90 }} />   {/* Logo */}
-        <col />                          {/* Título */}
-        <col style={{ width: 115 }} />  {/* Label (Document version / Date) */}
-        <col style={{ width: 100 }} />  {/* Valor */}
+        <col style={{ width: 115 }} />  {/* Doc version label */}
+        <col style={{ width: 100 }} />  {/* Doc version value */}
       </colgroup>
       <tbody>
-        {/* Linha 1: Document version */}
+        {/* Linha 1: Logo (rowSpan 2) | Título (colSpan 2) */}
         <tr style={{ height: 35 }}>
           <td rowSpan={2} style={{
-            border: BDR,
-            background: WH,
-            textAlign: 'center',
-            verticalAlign: 'middle',
-            padding: 4,
+            border: BDR, background: WH,
+            textAlign: 'center', verticalAlign: 'middle', padding: 4,
           }}>
             {logo
               ? <img src={logo} alt="" style={{ maxHeight: 42, maxWidth: 84, objectFit: 'contain' }} />
-              : <span style={{ fontWeight: 900, fontSize: 13, color: BLUE, fontFamily: FONT }}>·faurecia</span>
-            }
+              : <span style={{ fontWeight: 900, fontSize: 13, color: BLUE }}>·faurecia</span>}
           </td>
-          <td rowSpan={2} style={{
-            ...HD,
-            fontSize: 15,
-            fontWeight: 900,
-            textAlign: 'center',
-            letterSpacing: 0.3,
+          <td colSpan={2} rowSpan={2} style={{
+            ...HD, fontSize: 15, fontWeight: 900, textAlign: 'center', letterSpacing: 0.3,
           }}>
             {title}
           </td>
-          <td style={{
-            ...LB,
-            fontSize: 7,
-            textAlign: 'right',
-            paddingRight: 4,
-            borderBottom: BDR,
-          }}>
-            Document version
-          </td>
-          <td style={{
-            ...VL,
-            fontSize: 8,
-            textAlign: 'center',
-            fontWeight: 700,
-            borderBottom: BDR,
-          }}>
-            {ver}
-          </td>
         </tr>
-        {/* Linha 2: Date */}
-        <tr style={{ height: 15 }}>
-          <td style={{
-            ...LB,
-            fontSize: 7,
-            textAlign: 'right',
-            paddingRight: 4,
-          }}>
-            Date
-          </td>
-          <td style={{
-            ...VL,
-            fontSize: 7,
-          }}>
-            {date}
-          </td>
+        <tr style={{ height: 0 }} />
+      </tbody>
+    </table>
+  );
+}
+
+// Linha separada abaixo do cabeçalho: Document version | valor | espaço | Date | valor
+function HeaderInfo({ ver }: { ver: string }) {
+  const now = new Date();
+  const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+  return (
+    <table style={{ ...T, marginBottom: 2 }}>
+      <colgroup>
+        <col style={{ width: 115 }} />  {/* Doc version label */}
+        <col style={{ width: 160 }} />  {/* Doc version value */}
+        <col />                          {/* Espaço vazio */}
+        <col style={{ width: 115 }} />  {/* Date label */}
+        <col style={{ width: 160 }} />  {/* Date value */}
+      </colgroup>
+      <tbody>
+        <tr style={{ height: 14 }}>
+          <td style={{ ...LB, textAlign: 'right', paddingRight: 4, fontSize: 7 }}>Document version</td>
+          <td style={{ ...VL, textAlign: 'center', fontWeight: 700, fontSize: 8 }}>{ver}</td>
+          <td style={{ border: 'none', background: WH }} />
+          <td style={{ ...LB, textAlign: 'right', paddingRight: 4, fontSize: 7 }}>Date</td>
+          <td style={{ ...VL, fontSize: 7 }}>{date}</td>
         </tr>
       </tbody>
     </table>
@@ -153,37 +131,65 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
 
   return (
     <div style={PAGE}>
-      <Header title="Packaging Data Sheet - Series (page 1/2)"
-        ver={v(item.documentVersion)||'V1'} logo={logo} />
+      <Header title="Packaging Data Sheet - Series (page 1/2)" ver={v(item.documentVersion)||'V1'} logo={logo} />
+      <HeaderInfo ver={v(item.documentVersion)||'V1'} />
 
-      {/* PART DESCRIPTION + SUPPLIER */}
+      {/* PART DESCRIPTION + SUPPLIER — fiel ao original */}
       <table style={T}>
         <colgroup>
-          <col style={{ width: '13%' }}/><col style={{ width: '16%' }}/>
-          <col style={{ width: '7%'  }}/><col style={{ width: '9%'  }}/>
-          <col style={{ width: '7%'  }}/><col style={{ width: '10%' }}/>
-          <col style={{ width: '11%' }}/><col style={{ width: '27%' }}/>
+          <col style={{ width: '12%' }} /> {/* label esq */}
+          <col style={{ width: '24%' }} /> {/* valor part number / description */}
+          <col style={{ width: '9%'  }} /> {/* Program label */}
+          <col style={{ width: '9%'  }} /> {/* Program value */}
+          <col style={{ width: '9%'  }} /> {/* Daily consumption label */}
+          <col style={{ width: '9%'  }} /> {/* Daily consumption value */}
+          <col style={{ width: '13%' }} /> {/* Supplier label */}
+          <col style={{ width: '15%' }} /> {/* Supplier value */}
         </colgroup>
         <tbody>
+          {/* Títulos de seção */}
           <tr style={{ height: 14 }}>
             <td colSpan={6} style={{ ...SEC, fontSize: 8 }}>Part Description</td>
             <td colSpan={2} style={{ ...SEC, fontSize: 8 }}>Supplier</td>
           </tr>
+          {/* Linha 1: Part number | Program | Supplier name */}
           <tr style={{ height: RH }}>
-            <td style={LB}>Faurecia part number(s)</td><td style={VL} colSpan={3}>{v(item.partNumber)}</td>
-            <td style={LB}>Program</td><td style={VL}>{v(item.projeto)}</td>
-            <td style={LB}>Supplier name</td><td style={VL}>{v(item.fornecedor)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Faurecia part number(s)</td>
+            <td style={VL} colSpan={3}>{v(item.partNumber)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Program</td>
+            <td style={VL}>{v(item.projeto)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Supplier name</td>
+            <td style={VL}>{v(item.fornecedor)}</td>
           </tr>
+          {/* Linha 2: Description | Commodity | Supplier code */}
           <tr style={{ height: RH }}>
-            <td style={LB}>Description</td><td style={VL} colSpan={3}>{v(item.partName)}</td>
-            <td style={LB}>Commodity</td><td style={VL}>{v(item.commodity)}</td>
-            <td style={LB}>Supplier code</td><td style={VL}>{v(item.codFornecedor)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Description</td>
+            <td style={VL} colSpan={3}>{v(item.partName)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Commodity</td>
+            <td style={VL}>{v(item.commodity)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Supplier code</td>
+            <td style={VL}>{v(item.codFornecedor)}</td>
           </tr>
+          {/* Linha 3: Program | Daily consumption | Valid for Faurecia plant */}
           <tr style={{ height: RH }}>
-            <td style={LB}>Daily consumption</td><td style={VL}>{v(item.dailyConsumption)}</td>
-            <td style={LB}>Part unit</td><td style={VL}>{v(item.partUnit)||'Part'}</td>
-            <td style={LB}>Start of use</td><td style={VL}>{v(item.startOfUse)}</td>
-            <td style={LB}>Valid for Faurecia plant</td><td style={VL}>{v(item.validForPlant)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Program</td>
+            <td style={VL}>{v(item.projeto)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Daily consumption</td>
+            <td style={VL}>{v(item.dailyConsumption)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Part unit</td>
+            <td style={VL}>{v(item.partUnit)||'Part'}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Valid for Faurecia plant</td>
+            <td style={VL}>{v(item.validForPlant)}</td>
+          </tr>
+          {/* Linha 4: Commodity | Part unit | Start of use */}
+          <tr style={{ height: RH }}>
+            <td style={{ ...LB, textAlign: 'right' }}>Commodity</td>
+            <td style={VL}>{v(item.commodity)}</td>
+            <td style={{ ...LB, textAlign: 'right' }}>Part unit</td>
+            <td style={VL}>{v(item.partUnit)||'Part'}</td>
+            <td style={VL} colSpan={2}></td>
+            <td style={{ ...LB, textAlign: 'right' }}>Start of use</td>
+            <td style={VL}>{v(item.startOfUse)}</td>
           </tr>
         </tbody>
       </table>
@@ -424,8 +430,8 @@ function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
 
   return (
     <div style={PAGE}>
-      <Header title="Packaging Data Sheet - Back up (page 2/2)"
-        ver={v(item.documentVersion)||'V1'} logo={logo} />
+      <Header title="Packaging Data Sheet - Back up (page 2/2)" ver={v(item.documentVersion)||'V1'} logo={logo} />
+      <HeaderInfo ver={v(item.documentVersion)||'V1'} />
 
       {/* BACK-UP PACKAGING DATA */}
       <table style={T}>
