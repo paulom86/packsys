@@ -1,383 +1,723 @@
-import React from "react";
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Download } from 'lucide-react';
+import { Item, Project } from '../types';
+import { getItems, getProjects, getActiveProjectId } from '../utils/storage';
+import { calculateFields } from '../utils/calculations';
 
-export default function LPDSPreview() {
-  return (
-    <>
-      <style>{`
-*{box-sizing:border-box}
-    body{margin:0;padding:18px;background:#e9e9e9;font-family:Arial,Helvetica,sans-serif;color:#000}
-    .sheet{width:1388px;margin:0 auto;background:#fff;border:3px solid #000;overflow:hidden}
-    table{border-collapse:collapse;table-layout:fixed;width:100%}
-    td,th{border:1px solid #000;padding:0 4px;vertical-align:middle;line-height:1.05;font-size:11px}
-    .blue{background:#062a68;color:#fff;font-size:28px;font-weight:800;text-align:center;height:40px;letter-spacing:.2px}
-    .logo{width:198px;height:40px;text-align:left;padding-left:20px;background:#fff;border-left:0;border-top:0}
-    .logo span{display:inline-block;color:#24205f;font-size:28px;font-weight:700;letter-spacing:6px;transform:scaleX(1.15);transform-origin:left center}
-    .gray{background:#bfbfbf}
-    .black{background:#000;color:#fff;text-align:center;font-weight:800;font-size:16px;height:20px}
-    .meta td{height:22px}.meta-l{width:198px;text-align:right;font-weight:700;background:#d9d9d9}.meta-v{width:520px;text-align:center;font-weight:700;font-size:14px}.gap{width:142px;border-left:0;border-right:0;background:#fff}.date-l{width:151px;text-align:right;font-weight:700;background:#d9d9d9}.date-v{width:371px;font-size:14px;text-align:left}
-    .info-area{display:grid;grid-template-columns:718px 142px 522px;height:94px}.left-info{width:718px}.mid-gap{width:142px;background:#fff;border-left:1px solid #000;border-right:1px solid #000}.right-info{width:522px}.info-table{height:94px}.info-table td,.info-table th{height:18px}.lbl-l{width:198px;text-align:right;font-weight:700;font-size:10px;background:#bfbfbf}.v-a{width:172px}.v-b{width:180px}.v-c{width:168px}.lbl-r{width:180px;text-align:right;font-weight:700;font-size:10px;background:#bfbfbf}.val{background:#fff;font-size:12px;white-space:nowrap;overflow:hidden}.right{text-align:right}.supplier .black{height:18px}
+// ─────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────
+type Calc = ReturnType<typeof calculateFields> | null;
+const v = (x: unknown) => (x == null || x === '') ? '' : String(x);
+const chk = (on: boolean) => on ? '☑' : '☐';
 
-    /* ETAPA 2 */
-    .pack{margin-top:0;border-top:3px solid #000;background:#bfbfbf}
-    .pack-title{height:20px;background:#000;color:#fff;text-align:center;font-size:17px;font-weight:800;border-left:0;border-right:0}
-    .pack-body{height:164px;background:#bfbfbf;display:grid;grid-template-columns:370px 350px 140px 185px 175px 168px;overflow:hidden}
-    .p-left,.p-mid,.p-unit,.p-check-labels,.p-check-table,.p-end{height:164px;background:#bfbfbf}
-    .p-left table,.p-mid table,.p-unit table{height:164px}
-    .p-left td,.p-mid td,.p-unit td{height:27.333px;font-size:12px}
-    .p-label{background:#bfbfbf;text-align:right;font-weight:700;width:200px}.p-input{background:#fff;text-align:center;font-size:16px!important}.p-input.left{text-align:left;font-size:15px!important}.p-mid .p-label{width:180px}.p-unit td{border-left:0;border-right:0;background:#bfbfbf;text-align:left;font-weight:700;font-size:12px}.p-check-labels{padding-top:48px}.p-check-labels table{height:108px}.p-check-labels td{border:0;background:#bfbfbf;text-align:right;font-weight:700;font-size:12px;height:27px}.p-check-table{padding-top:26px}.p-check-table table{width:175px;height:112px}.p-check-table th{height:26px;background:#bfbfbf;font-size:10px;border-top:0}.p-check-table td{height:27px;background:#fff;text-align:center;font-size:15px}.p-end{border:0}
+// ─────────────────────────────────────────────────────────────
+// CSS — tudo em mm, travado para A4 landscape
+// ─────────────────────────────────────────────────────────────
+const PRINT_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Arial');
 
-    /* ETAPA 3 CORRIGIDA */
-    .main-table-wrap{border-top:3px solid #000;background:#bfbfbf;overflow:hidden}
-    .main-table{width:100%;height:302px;background:#bfbfbf}
-    .main-table th,.main-table td{height:27px;font-size:12px}
-    .main-table .w-label{width:195px;background:#bfbfbf;text-align:right;font-weight:700}
-    .main-table .w-part{width:170px;text-align:center;background:#fff}
-    .main-table .w-pu{width:180px;text-align:center;background:#fff}
-    .main-table .w-hu{width:170px;text-align:center;background:#fff}
-    .main-table .w-space{width:145px;background:#bfbfbf;border-left:2px solid #000;border-right:2px solid #000}
-    .main-table .w-d1{width:180px;text-align:center;background:#fff}
-    .main-table .w-d2{width:170px;text-align:center;background:#fff}
-    .main-table .w-d3{width:175px;text-align:center;background:#fff}
-    .main-table th{background:#bfbfbf;text-align:center;font-weight:700}
-    .main-table .graycell{background:#bfbfbf}
-    .main-table .num{font-size:16px;background:#fff;text-align:center}
-    .main-table .txt{font-size:15px;background:#fff;text-align:center}
-    .main-table .bold-border-left{border-left:2px solid #000}.main-table .bold-border-right{border-right:2px solid #000}.main-table .bold-top{border-top:2px solid #000}.main-table .no-border{border:0;background:#bfbfbf}.stack-label{font-size:9px!important;font-weight:700;text-align:center;background:#bfbfbf}.small-right{font-size:11px!important;font-weight:700;text-align:right;background:#bfbfbf}.dunnage-label{font-size:12px!important;font-weight:700;text-align:right;background:#bfbfbf}
-  .stack-box-combined{background:#bfbfbf!important;padding:0!important}.stack-box-combined table{width:100%;height:100%;border-collapse:collapse;table-layout:fixed}.stack-box-combined td{border:0;padding:0 6px;vertical-align:middle}.stack-box-combined .stack-lefttext{width:68%;text-align:left;font-size:9px!important;font-weight:700;line-height:1.1;padding-left:10px}.stack-box-combined .stack-lefttext span{font-size:9px!important;font-weight:700;line-height:1.1;display:inline-block}.stack-box-combined .stack-rightlabel{width:32%;text-align:right;font-size:12px!important;font-weight:700;background:#bfbfbf}.stack-box-combined tr + tr td{border-top:1px solid #000}.stack-value{background:#fff!important;text-align:center!important;font-size:16px!important}
-  
-    /* ETAPA 4 - PICTURES */
-    .pictures-wrap{border-top:3px solid #000;background:#fff}
-    .pictures-table{width:100%;table-layout:fixed;border-collapse:collapse}
-    .pictures-table td,.pictures-table th{border:1px solid #000;padding:0;vertical-align:top}
-    .pictures-title{height:20px;background:#000;color:#fff;text-align:center;font-size:16px;font-weight:800}
-    .pictures-head td{height:14px;background:#d7d7d7;text-align:center;font-weight:700;font-size:9px;line-height:1.05;padding:1px 3px}
-    .pictures-body td{height:152px;background:#fff}
-    .pic-slot{height:150px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
-    .photo-sim{width:95px;height:110px;background:linear-gradient(135deg,#fbf7ef,#d6c8b6);border:1px solid #ddd;display:flex;align-items:center;justify-content:center}
-    .part-shape{width:58px;height:92px;border-radius:24px 24px 8px 8px;background:repeating-linear-gradient(90deg,#0b203d 0 5px,#142b4e 5px 9px);border:3px solid #111b2e;box-shadow:0 8px 18px rgba(0,0,0,.25)}
-    .box-sim{width:74px;height:104px;background:#c9bca8;border:1px solid #876;padding:7px;display:grid;gap:4px}
-    .box-sim span{background:#101820;border-radius:14px}
-    .pallet-sim{width:150px;height:78px;position:relative;transform:skewX(-25deg);margin-top:18px}
-    .pallet-sim:before{content:"";position:absolute;left:0;top:18px;width:148px;height:38px;background:#6fa2db;border:2px solid #2e5f96}
-    .pallet-sim:after{content:"";position:absolute;left:16px;top:8px;width:148px;height:38px;background:repeating-linear-gradient(90deg,#74aee8 0 16px,#5188c0 16px 19px);border:2px solid #2e5f96}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  
-    /* ETAPA 5 - REMARKS */
-    .remarks-wrap{border-top:0;background:#fff}
-    .remarks-table{width:100%;table-layout:fixed;border-collapse:collapse}
-    .remarks-table td,.remarks-table th{border:1px solid #000;padding:0;vertical-align:middle}
-    .remarks-title{height:20px;background:#000;color:#fff;text-align:center;font-size:16px;font-weight:800}
-    .remarks-body{height:45px;background:#fff;font-size:12px;line-height:1.15;font-weight:700;color:#0f2f69;padding:4px 6px!important;text-align:left}
+  @page { size: A4 landscape; margin: 0; }
 
-  
-    /* ETAPA 6 - PAGE 2 HEADER */
-    .page2-header-wrap{background:#fff;border-top:0}
-    .page2-header-table{width:100%;border-collapse:collapse;table-layout:fixed}
-    .page2-header-table td{border:1px solid #000;padding:0;vertical-align:middle}
-    .page2-logo{width:198px;height:40px;background:#fff;text-align:left;padding-left:20px}
-    .page2-logo span{display:inline-block;color:#24205f;font-size:28px;font-weight:700;letter-spacing:4px;transform:scaleX(1.22);transform-origin:left center}
-    .page2-title{height:40px;background:#062a68;color:#fff;text-align:center;font-size:28px;font-weight:800;letter-spacing:.2px}
+  .lpds-root {
+    width: 297mm;
+    margin: 0 auto;
+    background: #ccc;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 6mm;
+    padding: 6mm;
+  }
 
-  
-    /* ETAPA EXTRA - SIGNATURES ANTES DA PÁGINA 2 */
-    .signatures-wrap{background:#fff;border-top:0}
-    .signatures-table{width:100%;border-collapse:collapse;table-layout:fixed}
-    .signatures-table td,.signatures-table th{border:1px solid #000;padding:0;vertical-align:middle}
-    .signatures-title{height:20px;background:#000;color:#fff;text-align:center;font-size:16px;font-weight:800}
-    .sig-label{background:#bfbfbf;text-align:right;font-weight:700;font-size:12px;padding-right:4px!important;line-height:1.05}
-    .sig-value{background:#fff;text-align:center;font-size:12px;height:20px}
-    .sig-name{font-size:11px;font-weight:700;white-space:nowrap}
-    .sig-mark{font-family:"Brush Script MT",cursive;font-size:24px;line-height:1;text-align:center;color:#394b6a}
-    .sig-row-1 td{height:34px}
-    .sig-row td{height:20px}
+  .lpds-page {
+    width: 297mm;
+    height: 210mm;
+    box-sizing: border-box;
+    padding: 3mm 3.5mm;
+    background: white;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5mm;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+  }
 
-  
-    /* ETAPA 7 - BACK-UP PACKAGING DATA */
-    .backup-main-wrap{background:#bfbfbf;border-top:3px solid #000}
-    .backup-title{height:20px;background:#000;color:#fff;text-align:center;font-size:16px;font-weight:800;line-height:20px}
-    .backup-main-table{width:100%;height:210px;border-collapse:collapse;table-layout:fixed}
-    .backup-main-table td,.backup-main-table th{border:1px solid #000;padding:0 4px;vertical-align:middle;font-size:12px;line-height:1.05}
-    .backup-main-table th{background:#bfbfbf;text-align:center;font-weight:700}
-    .backup-label{width:195px;background:#bfbfbf;text-align:right;font-weight:700}
-    .backup-part{width:170px;background:#fff;text-align:center}
-    .backup-pu{width:180px;background:#fff;text-align:center}
-    .backup-hu{width:165px;background:#fff;text-align:center}
-    .backup-space{width:140px;background:#bfbfbf;border-left:2px solid #000;border-right:2px solid #000}
-    .backup-cover{width:180px;background:#fff;text-align:center}
-    .backup-d1{width:170px;background:#fff;text-align:center}
-    .backup-d2{width:170px;background:#fff;text-align:center}
-    .backup-gray{background:#bfbfbf}
-    .backup-num{font-size:16px;background:#fff;text-align:center}
-    .backup-txt{font-size:15px;background:#fff;text-align:center}
-    .backup-bold-left{border-left:2px solid #000!important}
-    .backup-bold-right{border-right:2px solid #000!important}
-    .backup-stackbox{background:#c6c6c6!important;text-align:left;font-size:9px!important;font-weight:700;line-height:1.1;padding:0 4px 0 10px!important}
-    .backup-stackbox span{font-size:9px!important;font-weight:700;line-height:1.1;display:inline-block}
-    .backup-white-label{background:#fff!important;text-align:right!important;font-size:12px!important;font-weight:700!important;padding-right:6px!important}
-    .backup-white-value{background:#fff!important;text-align:center!important;font-size:16px!important}
-    .backup-side-label{font-size:12px!important;font-weight:700;text-align:right;background:#bfbfbf;padding-right:6px!important}
-
-  
-    /* ESPAÇAMENTO ENTRE ETAPAS */
-    .pack,
-    .main-table-wrap,
-    .pictures-wrap,
-    .remarks-wrap,
-    .signatures-wrap,
-    .page2-header-wrap,
-    .backup-main-wrap {
-      margin-top: 2.5mm;
+  @media print {
+    body * { visibility: hidden !important; }
+    .lpds-root, .lpds-root * { visibility: visible !important; }
+    .lpds-root {
+      position: fixed; top: 0; left: 0;
+      background: white; gap: 0; padding: 0;
     }
+    .lpds-page {
+      page-break-after: always;
+      break-after: page;
+      box-shadow: none;
+    }
+    .lpds-page:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .lpds-no-print { display: none !important; }
+  }
 
-  
-    /* ETAPA 8 - BACK-UP PICTURES */
-    .backup-pictures-wrap{background:#fff;border-top:0;margin-top:2.5mm}
-    .backup-pictures-table{width:100%;table-layout:fixed;border-collapse:collapse}
-    .backup-pictures-table td,.backup-pictures-table th{border:1px solid #000;padding:0;vertical-align:top}
-    .backup-pictures-title{height:20px;background:#000;color:#fff;text-align:center;font-size:16px;font-weight:800}
-    .backup-pictures-head td{height:18px;background:#d7d7d7;text-align:center;font-weight:700;font-size:9px;line-height:1.05;padding:1px 3px}
-    .backup-pictures-body td{height:202px;background:#fff}
-    .backup-pictures-slot{height:200px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+  /* ── TABLE BASE ── */
+  .lt { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .lt td, .lt th {
+    border: 1px solid #000;
+    padding: 0.2mm 0.8mm;
+    font-size: 6.2px;
+    line-height: 1.15;
+    vertical-align: middle;
+    overflow: hidden;
+    white-space: nowrap;
+    font-family: Arial, Helvetica, sans-serif;
+  }
 
-  
-    /* ETAPA 9 - BACK-UP REMARKS */
-    .backup-remarks-wrap{background:#fff;border-top:0;margin-top:2.5mm}
-    .backup-remarks-table{width:100%;table-layout:fixed;border-collapse:collapse}
-    .backup-remarks-table td,.backup-remarks-table th{border:1px solid #000;padding:0;vertical-align:middle}
-    .backup-remarks-title{height:20px;background:#000;color:#fff;text-align:center;font-size:16px;font-weight:800}
-    .backup-remarks-body{height:46px;background:#fff;font-size:12px;line-height:1.15;font-weight:700;color:#000;padding:4px 6px!important;text-align:left;vertical-align:top}
+  /* ── CELL TYPES ── */
+  .c-hd { background: #062a68; color: #fff; font-weight: 700; text-align: center; font-size: 6.8px; }
+  .c-lb { background: #bfbfbf; font-weight: 700; text-align: right; }
+  .c-vl { background: #fff; }
+  .c-gr { background: #bfbfbf; }
+  .c-bk { background: #000; color: #fff; font-weight: 700; text-align: center; font-size: 7px; }
+  .c-wh { background: #fff; }
 
-  
-    /* ETAPA 10 - FINAL SIGNATURES */
-    .final-signatures-wrap{background:#fff;border-top:0;margin-top:2.5mm}
-    .final-signatures-table{width:100%;border-collapse:collapse;table-layout:fixed}
-    .final-signatures-table td,.final-signatures-table th{border:1px solid #000;padding:0;vertical-align:middle}
-    .final-signatures-title{height:20px;background:#000;color:#fff;text-align:center;font-size:16px;font-weight:800}
-    .final-sig-label{background:#bfbfbf;text-align:right;font-weight:700;font-size:12px;padding-right:4px!important;line-height:1.05}
-    .final-sig-value{background:#fff;text-align:center;font-size:12px;height:20px}
-    .final-sig-name{font-size:11px;font-weight:700;white-space:nowrap}
-    .final-sig-mark{font-family:"Brush Script MT",cursive;font-size:24px;line-height:1;text-align:center;color:#394b6a}
-    .final-sig-row-1 td{height:34px}
-    .final-sig-row td{height:20px}
-      `}</style>
+  /* ── HEADER ── */
+  .hdr-logo {
+    width: 22mm; border: 1px solid #000; background: #fff;
+    text-align: left; padding-left: 3mm;
+    display: flex; align-items: center;
+  }
+  .hdr-logo span {
+    color: #24205f; font-size: 11px; font-weight: 900;
+    letter-spacing: 3px;
+  }
+  .hdr-title {
+    flex: 1; background: #062a68; color: #fff;
+    font-size: 12px; font-weight: 900;
+    text-align: center; display: flex; align-items: center; justify-content: center;
+    border: 1px solid #000; border-left: none; border-right: none;
+  }
+  .hdr-meta {
+    width: 55mm; border: 1px solid #000; background: #fff;
+    display: flex; flex-direction: column;
+  }
+  .hdr-meta-row {
+    flex: 1; display: flex; border-bottom: 1px solid #000;
+  }
+  .hdr-meta-row:last-child { border-bottom: none; }
+  .hdr-meta-label {
+    background: #bfbfbf; font-weight: 700; font-size: 6px;
+    text-align: right; padding-right: 1.5mm;
+    display: flex; align-items: center; justify-content: flex-end;
+    width: 30mm; border-right: 1px solid #000;
+  }
+  .hdr-meta-value {
+    flex: 1; font-size: 6.5px; font-weight: 700;
+    display: flex; align-items: center; padding-left: 1mm;
+  }
 
-      <main className="sheet">
-    <table>
-      <tr><td className="logo"><span>faurecia</span></td><td className="blue">Packaging Data Sheet - Series (page 1/2)</td></tr>
-    </table>
-    <table className="meta"><tr><td className="meta-l">Document version</td><td className="meta-v">v1</td><td className="gap"></td><td className="date-l">Date</td><td className="date-v">22/12/2023 16:41</td></tr></table>
-    <div className="info-area">
-      <div className="left-info"><table className="info-table"><tr><th className="black" colSpan={4}>Part Description</th></tr><tr><td className="lbl-l">Faurecia part number(s)</td><td className="val" colspan="3">434802201xxx</td></tr><tr><td className="lbl-l">Description</td><td className="val" colspan="3">551 CC CAPA TEC SEDOSO/ LINHA CINZA</td></tr><tr><td className="lbl-l">Program</td><td className="val v-a">551</td><td className="lbl-l v-b">Daily consumption</td><td className="val v-c"></td></tr><tr><td className="lbl-l">Commodity</td><td className="val v-a"></td><td className="lbl-l v-b">Part unit</td><td className="val v-c right">Part</td></tr></table></div>
-      <div className="mid-gap"></div>
-      <div className="right-info"><table className="info-table supplier"><tr><th className="black" colSpan={2}>Supplier</th></tr><tr><td className="lbl-r">Supplier name</td><td className="val">FAURECIA AUTOMOTIVE DO BRASIL SJP</td></tr><tr><td className="lbl-r">Supplier code</td><td className="val">1021000000</td></tr><tr><td className="lbl-r">Valid for Faurecia plant</td><td className="val">FMM GOIANA - PERNAMBUCO</td></tr><tr><td className="lbl-r">Start of use</td><td className="val">2023</td></tr></table></div>
-    </div>
+  /* ── SECTION TITLE ── */
+  .sec { background: #000; color: #fff; font-weight: 800; text-align: center; font-size: 7px; }
 
-    <section className="pack">
-      <div className="pack-title">Packaging data</div>
-      <div className="pack-body">
-        <div className="p-left"><table><tr><td className="p-label">Serial packaging</td><td className="p-input left">Cardboard</td></tr><tr><td className="p-label">Back-up packaging</td><td className="p-input"></td></tr><tr><td className="p-label">Box label standard</td><td className="p-input"></td></tr><tr><td className="p-label">Box label qty / PU</td><td className="p-input">1</td></tr><tr><td className="p-label">Minimum Order Quantity (in units)</td><td className="p-input">120</td></tr><tr><td className="p-label">Order Lot size (in units)</td><td className="p-input">120</td></tr></table></div>
-        <div className="p-mid"><table><tr><td className="p-label">Total packaging loop</td><td className="p-input"></td></tr><tr><td className="p-label">Packaging stock at the supplier</td><td className="p-input"></td></tr><tr><td className="p-label">Total number of PU</td><td className="p-input"></td></tr><tr><td className="p-label">Calculation based on:</td><td className="p-label"></td></tr><tr><td className="p-label">- Delivery frequency</td><td className="p-input">3</td></tr><tr><td className="p-label">- Return frequency</td><td className="p-input"></td></tr></table></div>
-        <div className="p-unit"><table><tr><td>days</td></tr><tr><td>days</td></tr><tr><td></td></tr><tr><td></td></tr><tr><td>per week</td></tr><tr><td>per week</td></tr></table></div>
-        <div className="p-check-labels"><table><tr><td>Reusable packaging</td></tr><tr><td>Rented packaging</td></tr><tr><td>If "yes", rental company</td></tr><tr><td>Mixed pallet</td></tr></table></div>
-        <div className="p-check-table"><table><tr><th>yes</th><th>no</th></tr><tr><td>☐</td><td>☑</td></tr><tr><td>☐</td><td>☑</td></tr><tr><td>☐</td><td>☑</td></tr><tr><td>☐</td><td>☑</td></tr></table></div>
-        <div className="p-end"></div>
+  /* ── PICTURES ── */
+  .pic-cell { background: #fff; text-align: center; vertical-align: middle; padding: 1mm !important; }
+  .pic-cell img { max-height: 28mm; max-width: 100%; object-fit: contain; display: block; margin: 0 auto; }
+  .pic-cell-p2 img { max-height: 50mm; }
+
+  /* ── SIGNATURES ── */
+  .sig-label { background: #bfbfbf; font-weight: 700; text-align: right; font-size: 6px; }
+  .sig-value { background: #fff; text-align: center; font-size: 6px; }
+  .sig-value-tall { height: 8mm !important; }
+
+  /* ── FOOTER ── */
+  .lpds-footer {
+    margin-top: auto;
+    display: flex; justify-content: space-between;
+    font-size: 5px; color: #555;
+    border-top: 1px solid #aaa; padding-top: 0.3mm;
+  }
+
+  /* ── PACK DATA CHECKBOXES ── */
+  .chk-yes-no th { background: #bfbfbf; font-size: 5.5px; text-align: center; }
+  .chk-yes-no td { background: #fff; text-align: center; font-size: 9px; }
+
+  /* ── BACKUP SPACE COL ── */
+  .space-col { background: #bfbfbf !important; border-left: 2px solid #000 !important; border-right: 2px solid #000 !important; }
+`;
+
+// ─────────────────────────────────────────────────────────────
+// PAGE 1
+// ─────────────────────────────────────────────────────────────
+function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string }) {
+  const pu = v(calc?.puPorHU);
+  const now = new Date();
+  const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+  return (
+    <div className="lpds-page">
+
+      {/* HEADER */}
+      <div style={{ display: 'flex', height: '12mm', flexShrink: 0 }}>
+        <div className="hdr-logo">
+          {logo
+            ? <img src={logo} alt="" style={{ maxHeight: '10mm', maxWidth: '20mm', objectFit: 'contain' }} />
+            : <span>·faurecia</span>}
+        </div>
+        <div className="hdr-title">Packaging Data Sheet - Series (page 1/2)</div>
+        <div className="hdr-meta">
+          <div className="hdr-meta-row">
+            <div className="hdr-meta-label">Document version</div>
+            <div className="hdr-meta-value">{v(item.documentVersion) || 'V1'}</div>
+          </div>
+          <div className="hdr-meta-row">
+            <div className="hdr-meta-label">Date</div>
+            <div className="hdr-meta-value">{date}</div>
+          </div>
+        </div>
       </div>
-    </section>
 
-    <section className="main-table-wrap">
-      <table className="main-table">
+      {/* PART DESCRIPTION + SUPPLIER */}
+      <table className="lt" style={{ flexShrink: 0 }}>
         <colgroup>
-          <col className="w-label" /><col className="w-part" /><col className="w-pu" /><col className="w-hu" /><col className="w-space" /><col className="w-d1" /><col className="w-d2" /><col className="w-d3" />
+          <col style={{ width: '14%' }} /><col style={{ width: '22%' }} />
+          <col style={{ width: '9%'  }} /><col style={{ width: '8%'  }} />
+          <col style={{ width: '9%'  }} /><col style={{ width: '9%'  }} />
+          <col style={{ width: '13%' }} /><col style={{ width: '16%' }} />
         </colgroup>
-        <tr>
-          <th></th><th>Part</th><th className="bold-border-left">Packaging Unit = PU</th><th className="bold-border-left bold-border-right">Handling Unit = HU</th><th className="w-space" rowSpan={11}></th><th>Dunnage 1</th><th>Dunnage 2</th><th className="bold-border-left">Dunnage 3</th>
-        </tr>
-        <tr><td className="w-label">Faurecia part number</td><td className="graycell"></td><td className="txt bold-border-left">BEM0803030N</td><td className="txt bold-border-left bold-border-right">TM15012014</td><td></td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Description</td><td className="graycell"></td><td className="txt bold-border-left">800X300X300</td><td className="txt bold-border-left bold-border-right">1200x800x150</td><td></td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Length (mm)</td><td className="num">360</td><td className="num bold-border-left">800</td><td className="num bold-border-left bold-border-right">1200</td><td></td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Width (mm)</td><td className="num">100</td><td className="num bold-border-left">300</td><td className="num bold-border-left bold-border-right">800</td><td></td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Height (mm)</td><td className="num">85</td><td className="num bold-border-left">300</td><td className="num bold-border-left bold-border-right">450</td><td></td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Tare Weight (kg)</td><td></td><td className="num bold-border-left">0,2</td><td className="num bold-border-left bold-border-right">12,0</td><td></td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Gross Weight (kg)</td><td className="num">0,06</td><td className="num bold-border-left">2,00</td><td className="num bold-border-left bold-border-right">20,0</td><td className="dunnage-label">Qty dunnages / PU</td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Package Density (units)</td><td className="graycell"></td><td className="num bold-border-left">30</td><td className="num bold-border-left bold-border-right">120</td><td className="dunnage-label">Qty dunnages / HU</td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">PU / layer of HU</td><td className="num">4</td><td className="stack-box-combined bold-border-left" rowSpan={2}><table><tr><td className="stack-lefttext" rowSpan={2}>Stackability<br /><span>(qty of levels per<br />stack)</span></td><td className="stack-rightlabel">Static</td></tr><tr><td className="stack-rightlabel">Dynamic</td></tr></table></td><td className="stack-value bold-border-left bold-border-right">6</td><td></td><td></td><td className="bold-border-left"></td></tr>
-        <tr><td className="w-label">Quantity PU / HU</td><td className="num">4</td><td className="stack-value bold-border-left bold-border-right">3</td><td className="dunnage-label">Foldable ratio</td><td className="graycell" colSpan={2}></td></tr>
+        <tbody>
+          <tr><td colSpan={6} className="c-bk sec">Part Description</td><td colSpan={2} className="c-bk sec">Supplier</td></tr>
+          <tr style={{ height: '3.8mm' }}>
+            <td className="c-lb">Faurecia part number(s)</td><td className="c-vl" colSpan={3}>{v(item.partNumber)}</td>
+            <td className="c-lb">Program</td><td className="c-vl">{v(item.projeto)}</td>
+            <td className="c-lb">Supplier name</td><td className="c-vl">{v(item.fornecedor)}</td>
+          </tr>
+          <tr style={{ height: '3.8mm' }}>
+            <td className="c-lb">Description</td><td className="c-vl" colSpan={3}>{v(item.partName)}</td>
+            <td className="c-lb">Commodity</td><td className="c-vl">{v(item.commodity)}</td>
+            <td className="c-lb">Supplier code</td><td className="c-vl">{v(item.codFornecedor)}</td>
+          </tr>
+          <tr style={{ height: '3.8mm' }}>
+            <td className="c-lb">Program</td><td className="c-vl">{v(item.projeto)}</td>
+            <td className="c-lb">Daily consumption</td><td className="c-vl">{v(item.dailyConsumption)}</td>
+            <td className="c-lb">Part unit</td><td className="c-vl">{v(item.partUnit)||'Part'}</td>
+            <td className="c-lb">Valid for Faurecia plant</td><td className="c-vl">{v(item.validForPlant)}</td>
+          </tr>
+          <tr style={{ height: '3.8mm' }}>
+            <td className="c-lb">Commodity</td><td className="c-vl">{v(item.commodity)}</td>
+            <td colSpan={4} className="c-vl"></td>
+            <td className="c-lb">Start of use</td><td className="c-vl">{v(item.startOfUse)}</td>
+          </tr>
+        </tbody>
       </table>
-    </section>
-  
-    <section className="pictures-wrap">
-      <table className="pictures-table">
-        <tr><th className="pictures-title" colSpan={4}>Pictures</th></tr>
-        <tr className="pictures-head">
-          <td>Part</td>
-          <td>PU with parts (+ show label location)</td>
-          <td>Complete HU with cover (+ show label location)</td>
-          <td>Dunnage</td>
-        </tr>
-        <tr className="pictures-body">
-          <td><div className="pic-slot"><div className="photo-sim"><div className="part-shape"></div></div></div></td>
-          <td><div className="pic-slot"><div className="box-sim"><span></span><span></span><span></span></div></div></td>
-          <td><div className="pic-slot"><div className="pallet-sim"></div></div></td>
-          <td><div className="pic-slot"></div></td>
-        </tr>
-      </table>
-    </section>
 
-  
-    <section className="remarks-wrap">
-      <table className="remarks-table">
-        <tr><th className="remarks-title">Remarks</th></tr>
-        <tr><td className="remarks-body">*Altura máx 1,20M - As caixas que não tiverem pontos de apoio (pegas) devem ser incluidos nas embalagens, por recomendação da ERGONOMIA. Na falta da caixa padrão, a backup deve conter a mesma quantidade de peças conforme documento.</td></tr>
-      </table>
-    </section>
-
-  
-    
-    <section className="signatures-wrap">
-      <table className="signatures-table">
+      {/* PACKAGING DATA */}
+      <table className="lt" style={{ flexShrink: 0 }}>
         <colgroup>
-          <col style={{ width: "200px" }} /><col style={{ width: "170px" }} /><col style={{ width: "180px" }} /><col style={{ width: "170px" }} /><col style={{ width: "140px" }} /><col style={{ width: "180px" }} /><col style={{ width: "180px" }} /><col style={{ width: "148px" }} />
+          <col style={{ width: '8%'  }} /><col style={{ width: '6%'  }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '5%'  }} />
+          <col style={{ width: '3%'  }} /><col style={{ width: '3%'  }} /><col style={{ width: '3%'  }} />
+          <col style={{ width: '9%'  }} /><col style={{ width: '3%'  }} /><col style={{ width: '3%'  }} />
+          <col style={{ width: '9%'  }} /><col style={{ width: '5%'  }} />
+          <col style={{ width: '4%'  }} /><col style={{ width: '29%' }} />
         </colgroup>
-        <tr><th className="signatures-title" colSpan={8}>Signatures</th></tr>
-        <tr className="sig-row-1">
-          <td className="sig-label">Supplier Logistics</td>
-          <td className="sig-value"></td>
-          <td className="sig-label">Faurecia plant Logistics</td>
-          <td className="sig-value"><div className="sig-mark">GM</div></td>
-          <td className="sig-label">Faurecia plant Quality</td>
-          <td className="sig-value"></td>
-          <td className="sig-label">Faurecia plant HSE<br />(for new packaging)</td>
-          <td className="sig-value"></td>
-        </tr>
-        <tr className="sig-row">
-          <td className="sig-label">Position</td><td className="sig-value"></td>
-          <td className="sig-label">Position</td><td className="sig-value"></td>
-          <td className="sig-label">Position</td><td className="sig-value"></td>
-          <td className="sig-label">Position</td><td className="sig-value"></td>
-        </tr>
-        <tr className="sig-row">
-          <td className="sig-label">Name</td><td className="sig-value"></td>
-          <td className="sig-label">Name</td><td className="sig-value sig-name">Gabryel Maia de Vasconcelos</td>
-          <td className="sig-label">Name</td><td className="sig-value"></td>
-          <td className="sig-label">Name</td><td className="sig-value"></td>
-        </tr>
-        <tr className="sig-row">
-          <td className="sig-label">Date</td><td className="sig-value"></td>
-          <td className="sig-label">Date</td><td className="sig-value"></td>
-          <td className="sig-label">Date</td><td className="sig-value"></td>
-          <td className="sig-label">Date</td><td className="sig-value"></td>
-        </tr>
+        <tbody>
+          <tr><td colSpan={14} className="c-bk sec">Packaging data</td></tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Serial packaging</td><td className="c-vl">{v(item.serialPackaging)}</td>
+            <td className="c-lb">Total packaging loop</td><td className="c-vl">{v(item.totalPackagingLoop)}</td>
+            <td className="c-lb" style={{ fontSize: '5px' }}>days</td>
+            <td className="c-lb" style={{ textAlign: 'center', fontSize: '5px' }}>yes</td>
+            <td className="c-lb" style={{ textAlign: 'center', fontSize: '5px' }}>no</td>
+            <td className="c-lb" style={{ textAlign: 'right' }}>Reusable packaging</td>
+            <td className="c-vl" style={{ textAlign: 'center', fontSize: '9px' }}>{chk(item.reusablePackaging)}</td>
+            <td className="c-vl" style={{ textAlign: 'center', fontSize: '9px' }}>{chk(!item.reusablePackaging)}</td>
+            <td className="c-lb">- Delivery frequency</td><td className="c-vl">{v(item.deliveryFrequency)}</td>
+            <td className="c-lb" style={{ fontSize: '5px' }}>per week</td><td className="c-vl"></td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Back-up packaging</td><td className="c-vl"></td>
+            <td className="c-lb">Packaging stock at supplier</td><td className="c-vl">{v(item.packagingStockSupplier)}</td>
+            <td className="c-lb" style={{ fontSize: '5px' }}>days</td><td className="c-vl"></td><td className="c-vl"></td>
+            <td className="c-lb" style={{ textAlign: 'right' }}>Rented packaging</td>
+            <td className="c-vl" style={{ textAlign: 'center', fontSize: '9px' }}>{chk(item.rentedPackaging)}</td>
+            <td className="c-vl" style={{ textAlign: 'center', fontSize: '9px' }}>{chk(!item.rentedPackaging)}</td>
+            <td className="c-lb">- Return frequency</td><td className="c-vl">{v(item.returnFrequency)}</td>
+            <td className="c-lb" style={{ fontSize: '5px' }}>per week</td><td className="c-vl"></td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Box label standard</td><td className="c-vl"></td>
+            <td className="c-lb">Total number of PU</td><td className="c-vl">{v(item.totalPU)}</td>
+            <td className="c-vl"></td>
+            <td colSpan={2} className="c-lb" style={{ textAlign: 'center', fontSize: '5px' }}>If "yes", rental company</td>
+            <td className="c-lb" style={{ textAlign: 'right' }}>Mixed pallet</td>
+            <td className="c-vl" style={{ textAlign: 'center', fontSize: '9px' }}>{chk(item.mixedPallet)}</td>
+            <td className="c-vl" style={{ textAlign: 'center', fontSize: '9px' }}>{chk(!item.mixedPallet)}</td>
+            <td colSpan={4} className="c-vl">{v(item.rentalCompany)}</td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Box label qty / PU</td><td className="c-vl">{v(item.boxLabelQty)}</td>
+            <td colSpan={2} className="c-lb">Calculation based on:</td>
+            <td colSpan={3} className="c-lb">Minimum Order Quantity (in units)</td>
+            <td className="c-vl">{v(item.moq)}</td>
+            <td colSpan={6} className="c-vl"></td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td colSpan={4} className="c-vl"></td>
+            <td colSpan={3} className="c-lb">Order Lot size (in units)</td>
+            <td className="c-vl">{v(item.orderLotSize)}</td>
+            <td colSpan={6} className="c-vl"></td>
+          </tr>
+        </tbody>
       </table>
-    </section>
 
-
-    <section className="page2-header-wrap">
-      <table className="page2-header-table">
-        <tr>
-          <td className="page2-logo"><span>faurecia</span></td>
-          <td className="page2-title">Packaging Data Sheet - Back up (page 2/2)</td>
-        </tr>
-      </table>
-    </section>
-
-  
-    <section className="backup-main-wrap">
-      <div className="backup-title">Back-up packaging data</div>
-      <table className="backup-main-table">
+      {/* MAIN TABLE */}
+      <table className="lt" style={{ flexShrink: 0 }}>
         <colgroup>
-          <col className="backup-label" /><col className="backup-part" /><col className="backup-pu" /><col className="backup-hu" /><col className="backup-space" /><col className="backup-cover" /><col className="backup-d1" /><col className="backup-d2" />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '4%'  }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '23%' }} />
         </colgroup>
-        <tr>
-          <th></th>
-          <th>Part</th>
-          <th className="backup-bold-left">Packaging Unit = PU</th>
-          <th className="backup-bold-left backup-bold-right">Handling Unit = HU</th>
-          <th className="backup-space" rowSpan={11}></th>
-          <th>Cover for HU</th>
-          <th>Dunnage 1</th>
-          <th>Dunnage 2</th>
-        </tr>
-        <tr><td className="backup-label">Faurecia part number</td><td className="backup-gray"></td><td className="backup-txt backup-bold-left">BEM0803030N</td><td className="backup-txt backup-bold-left backup-bold-right">TM15012014</td><td></td><td></td><td></td></tr>
-        <tr><td className="backup-label">Description</td><td className="backup-gray"></td><td className="backup-txt backup-bold-left">800X300X300</td><td className="backup-txt backup-bold-left backup-bold-right">1200x800x150</td><td></td><td></td><td></td></tr>
-        <tr><td className="backup-label">Length (mm)</td><td className="backup-num">360</td><td className="backup-num backup-bold-left">800</td><td className="backup-num backup-bold-left backup-bold-right">1200</td><td></td><td></td><td></td></tr>
-        <tr><td className="backup-label">Width (mm)</td><td className="backup-num">100</td><td className="backup-num backup-bold-left">300</td><td className="backup-num backup-bold-left backup-bold-right">800</td><td></td><td></td><td></td></tr>
-        <tr><td className="backup-label">Height (mm)</td><td className="backup-num">85</td><td className="backup-num backup-bold-left">300</td><td className="backup-num backup-bold-left backup-bold-right">450</td><td></td><td></td><td></td></tr>
-        <tr><td className="backup-label">Tare Weight (kg)</td><td></td><td className="backup-num backup-bold-left">0,2</td><td className="backup-num backup-bold-left backup-bold-right">12</td><td></td><td></td><td></td></tr>
-        <tr><td className="backup-label">Gross Weight (kg)</td><td></td><td className="backup-num backup-bold-left">2</td><td className="backup-num backup-bold-left backup-bold-right">20</td><td className="backup-side-label">Qty dunnages / PU</td><td></td><td></td></tr>
-        <tr><td className="backup-label">Package Density (units)</td><td className="backup-gray"></td><td className="backup-num backup-bold-left">30</td><td className="backup-num backup-bold-left backup-bold-right">120</td><td className="backup-side-label">Qty dunnages / HU</td><td></td><td></td></tr>
-        <tr><td className="backup-label">PU / layer of HU</td><td className="backup-num">4</td><td className="backup-stackbox backup-bold-left" rowSpan={2}>Stackability<br /><span>(qty of levels<br />per stack)</span></td><td className="backup-white-label backup-bold-left">Static</td><td className="backup-white-value backup-bold-right">6</td><td></td><td></td></tr>
-        <tr><td className="backup-label">Quantity PU / HU</td><td className="backup-num">4</td><td className="backup-white-label backup-bold-left">Dynamic</td><td className="backup-white-value backup-bold-right">3</td><td className="backup-side-label">Foldable ratio</td><td></td><td></td></tr>
+        <tbody>
+          <tr style={{ height: '4mm' }}>
+            <td className="c-gr"></td>
+            <td className="c-hd">Part</td>
+            <td className="c-hd">Packaging Unit = PU</td>
+            <td className="c-hd">Handling Unit = HU</td>
+            <td className="c-gr" rowSpan={13} style={{ borderLeft: '2px solid #000', borderRight: '2px solid #000' }}></td>
+            <td className="c-hd">Dunnage 1</td>
+            <td className="c-hd">Dunnage 2</td>
+            <td className="c-hd">Dunnage 3</td>
+            <td className="c-gr" style={{ border: 'none' }}></td>
+          </tr>
+          {[
+            ['Faurecia part number', '', v(item.puCode),   v(item.huMedC)?`TM${v(item.huMedC)}`:'', v(item.dun1Code), v(item.dun2Code), v(item.dun3Code), ''],
+            ['Description',          '', v(item.puDesc),   v(item.huMedC)&&v(item.huMedL)&&v(item.huMedA)?`${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}`:'', v(item.dun1Desc), v(item.dun2Desc), v(item.dun3Desc), ''],
+            ['Length (mm)',           v(item.comprimento), v(item.puMedC), v(item.huMedC), v(item.dun1MedC), v(item.dun2MedC), v(item.dun3MedC), ''],
+            ['Width (mm)',            v(item.largura),     v(item.puMedL), v(item.huMedL), v(item.dun1MedL), v(item.dun2MedL), v(item.dun3MedL), ''],
+            ['Height (mm)',           v(item.altura),      v(item.puMedA), v(item.huMedA), v(item.dun1MedA), v(item.dun2MedA), v(item.dun3MedA), ''],
+            ['Tare Weight (kg)',      '', v(item.puPeso),  v(item.huPeso), '', '', '', ''],
+            ['Gross Weight (kg)',     '', v(item.puPesoBruto||item.brutoPU), v(item.huPesoBruto), '', '', '', ''],
+          ].map(([lbl, part, pu2, hu, d1, d2, d3, _], ri) => (
+            <tr key={ri} style={{ height: '3.5mm' }}>
+              <td className="c-lb">{lbl}</td>
+              <td className={ri < 2 ? 'c-gr' : 'c-vl'}>{part}</td>
+              <td className="c-vl">{pu2}</td>
+              <td className="c-vl">{hu}</td>
+              <td className="c-vl">{d1}</td>
+              <td className="c-vl">{d2}</td>
+              <td className="c-vl">{d3}</td>
+              <td style={{ border: 'none' }}></td>
+            </tr>
+          ))}
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Package Density (units)</td><td className="c-gr"></td>
+            <td className="c-vl">{v(item.pecasPorPU)}</td><td className="c-vl">{pu}</td>
+            <td className="c-vl"></td><td className="c-vl"></td><td className="c-vl"></td>
+            <td style={{ border: 'none' }}></td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Qty dunnages / PU</td><td className="c-gr"></td>
+            <td className="c-vl"></td><td className="c-vl"></td>
+            <td className="c-vl">{v(item.dun1QtyPerPU)}</td>
+            <td className="c-vl">{v(item.dun2QtyPerPU)}</td>
+            <td className="c-vl">{v(item.dun3QtyPerPU)}</td>
+            <td style={{ border: 'none' }}></td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">PU / layer of HU</td><td className="c-gr"></td>
+            <td className="c-vl"></td><td className="c-vl">{v(item.puPorCamada)}</td>
+            <td className="c-vl"></td><td className="c-vl"></td><td className="c-vl"></td>
+            <td style={{ border: 'none' }}></td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Qty dunnages / HU</td><td className="c-gr"></td>
+            <td className="c-vl"></td><td className="c-vl"></td>
+            <td className="c-vl">{v(item.dun1QtyPerHU)}</td>
+            <td className="c-vl">{v(item.dun2QtyPerHU)}</td>
+            <td className="c-vl">{v(item.dun3QtyPerHU)}</td>
+            <td style={{ border: 'none' }}></td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td className="c-lb">Quantity PU / HU</td><td className="c-gr"></td>
+            <td className="c-vl"></td><td className="c-vl">{pu}</td>
+            <td className="c-vl"></td><td className="c-vl"></td><td className="c-vl"></td>
+            <td style={{ border: 'none' }}></td>
+          </tr>
+          <tr style={{ height: '4mm' }}>
+            <td className="c-lb" style={{ fontSize: '5.5px', whiteSpace: 'normal' }}>Stackability (qty of levels per stack)</td>
+            <td className="c-gr"></td><td className="c-vl"></td><td className="c-vl"></td>
+            <td className="c-vl"></td><td className="c-vl"></td><td className="c-vl"></td>
+            <td className="c-gr" style={{ fontSize: '6px', whiteSpace: 'normal', border: '1px solid #000' }}>
+              Static: {v(item.empilhavelStatic)}&nbsp; Dynamic: {v(item.empilhavelDynamic)}
+            </td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td colSpan={6} className="c-vl" style={{ border: 'none' }}></td>
+            <td className="c-lb">Foldable ratio</td>
+            <td className="c-vl" style={{ border: '1px solid #000' }}>{v(item.foldableRatio)}</td>
+          </tr>
+        </tbody>
       </table>
-    </section>
 
-
-  
-    <section className="backup-pictures-wrap">
-      <table className="backup-pictures-table">
-        <tr><th className="backup-pictures-title" colSpan={4}>Back-up pictures</th></tr>
-        <tr className="backup-pictures-head">
-          <td>Part</td>
-          <td>PU with parts (+ show label location)</td>
-          <td>Complete HU with cover (+ show label location)</td>
-          <td>Dunnage</td>
-        </tr>
-        <tr className="backup-pictures-body">
-          <td><div className="backup-pictures-slot"></div></td>
-          <td><div className="backup-pictures-slot"></div></td>
-          <td><div className="backup-pictures-slot"></div></td>
-          <td><div className="backup-pictures-slot"></div></td>
-        </tr>
-      </table>
-    </section>
-
-
-  
-    <section className="backup-remarks-wrap">
-      <table className="backup-remarks-table">
-        <tr><th className="backup-remarks-title">Back-up remarks</th></tr>
-        <tr><td className="backup-remarks-body">(wrapping, thermo sealed bendings, multi-loop disposable packaging, kit, etc.)</td></tr>
-      </table>
-    </section>
-
-    {/* SIGNATURES — PÁGINA 2 */}
-    <section className="final-signatures-wrap">
-      <table className="final-signatures-table">
+      {/* PICTURES */}
+      <table className="lt" style={{ flexShrink: 0 }}>
         <colgroup>
-          <col style={{ width: "200px" }} /><col style={{ width: "170px" }} /><col style={{ width: "180px" }} /><col style={{ width: "170px" }} /><col style={{ width: "140px" }} /><col style={{ width: "180px" }} /><col style={{ width: "180px" }} /><col style={{ width: "148px" }} />
+          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
+          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
         </colgroup>
-        <tr><th className="final-signatures-title" colSpan={8}>Signatures</th></tr>
-        <tr className="final-sig-row-1">
-          <td className="final-sig-label">Supplier Logistics</td>
-          <td className="final-sig-value"></td>
-          <td className="final-sig-label">Faurecia plant Logistics</td>
-          <td className="final-sig-value"></td>
-          <td className="final-sig-label">Faurecia plant Quality</td>
-          <td className="final-sig-value"></td>
-          <td className="final-sig-label">Faurecia plant HSE<br />(for new packaging)</td>
-          <td className="final-sig-value"></td>
-        </tr>
-        <tr className="final-sig-row">
-          <td className="final-sig-label">Position</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Position</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Position</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Position</td><td className="final-sig-value"></td>
-        </tr>
-        <tr className="final-sig-row">
-          <td className="final-sig-label">Name</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Name</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Name</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Name</td><td className="final-sig-value"></td>
-        </tr>
-        <tr className="final-sig-row">
-          <td className="final-sig-label">Date</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Date</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Date</td><td className="final-sig-value"></td>
-          <td className="final-sig-label">Date</td><td className="final-sig-value"></td>
-        </tr>
+        <tbody>
+          <tr style={{ height: '30mm' }}>
+            {[item.imagemPart, item.imagemPU, item.imagemHU, item.imagemDunnage].map((img, i) => (
+              <td key={i} className="pic-cell">
+                {img && <img src={img} alt="" crossOrigin="anonymous" />}
+              </td>
+            ))}
+          </tr>
+          <tr><td colSpan={4} className="c-bk sec">Pictures</td></tr>
+        </tbody>
       </table>
-    </section>
 
-  </main>
-    </>
+      {/* REMARKS */}
+      <table className="lt" style={{ flexShrink: 0 }}>
+        <tbody>
+          <tr><td className="c-bk sec">Remarks</td></tr>
+          <tr style={{ height: '8mm' }}>
+            <td className="c-vl" style={{ whiteSpace: 'normal', verticalAlign: 'top', fontSize: '6px', padding: '1mm' }}>
+              {v(item.remarks)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* SIGNATURES */}
+      <table className="lt" style={{ flexShrink: 0 }}>
+        <colgroup>
+          <col style={{ width: '12%' }} /><col style={{ width: '13%' }} />
+          <col style={{ width: '12%' }} /><col style={{ width: '13%' }} />
+          <col style={{ width: '12%' }} /><col style={{ width: '13%' }} />
+          <col style={{ width: '13%' }} /><col style={{ width: '12%' }} />
+        </colgroup>
+        <tbody>
+          <tr><td colSpan={8} className="c-bk sec">Signatures</td></tr>
+          <tr style={{ height: '8mm' }}>
+            <td className="sig-label">Supplier Logistics</td><td className="sig-value sig-value-tall"></td>
+            <td className="sig-label">Faurecia plant Logistics</td><td className="sig-value sig-value-tall"></td>
+            <td className="sig-label">Faurecia plant Quality</td><td className="sig-value sig-value-tall"></td>
+            <td className="sig-label" style={{ whiteSpace: 'normal', fontSize: '5.5px' }}>Faurecia plant HSE<br />(for new packaging)</td>
+            <td className="sig-value sig-value-tall"></td>
+          </tr>
+          {['Position', 'Name', 'Date'].map(l => (
+            <tr key={l} style={{ height: '4mm' }}>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="lpds-footer">
+        <span>Property of Faurecia — Internal Documentation.</span>
+        <span>FAU-F-PSG-2027 — issue 02 — 07/17</span>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAGE 2
+// ─────────────────────────────────────────────────────────────
+function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string }) {
+  const pu = v(calc?.puPorHU);
+  const now = new Date();
+  const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+
+  return (
+    <div className="lpds-page">
+
+      {/* HEADER */}
+      <div style={{ display: 'flex', height: '12mm', flexShrink: 0 }}>
+        <div className="hdr-logo">
+          {logo
+            ? <img src={logo} alt="" style={{ maxHeight: '10mm', maxWidth: '20mm', objectFit: 'contain' }} />
+            : <span>·faurecia</span>}
+        </div>
+        <div className="hdr-title">Packaging Data Sheet - Back up (page 2/2)</div>
+        <div className="hdr-meta">
+          <div className="hdr-meta-row">
+            <div className="hdr-meta-label">Document version</div>
+            <div className="hdr-meta-value">{v(item.documentVersion) || 'V1'}</div>
+          </div>
+          <div className="hdr-meta-row">
+            <div className="hdr-meta-label">Date</div>
+            <div className="hdr-meta-value">{date}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* BACK-UP PACKAGING DATA */}
+      <table className="lt" style={{ flexShrink: 0 }}>
+        <colgroup>
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '4%'  }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} /><col style={{ width: '23%' }} />
+        </colgroup>
+        <tbody>
+          <tr><td colSpan={9} className="c-bk sec">Back-up packaging data</td></tr>
+          <tr style={{ height: '4mm' }}>
+            <td className="c-gr"></td>
+            <td className="c-hd">Part</td>
+            <td className="c-hd">Packaging Unit = PU</td>
+            <td className="c-hd">Handling Unit = HU</td>
+            <td className="c-gr" rowSpan={13} style={{ borderLeft: '2px solid #000', borderRight: '2px solid #000' }}></td>
+            <td className="c-hd">Cover for HU</td>
+            <td className="c-hd">Dunnage 1</td>
+            <td className="c-hd">Dunnage 2</td>
+            <td className="c-gr" style={{ border: 'none' }}></td>
+          </tr>
+          {[
+            ['Faurecia part number', '', v(item.puCode), v(item.huMedC)?`TM${v(item.huMedC)}`:'', v(item.coverHUCode), v(item.dun1Code), v(item.dun2Code), ''],
+            ['Description',          '', v(item.puDesc), v(item.huMedC)&&v(item.huMedL)&&v(item.huMedA)?`${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}`:'', v(item.coverHUDesc), v(item.dun1Desc), v(item.dun2Desc), ''],
+            ['Length (mm)',           v(item.comprimento), v(item.puMedC), v(item.huMedC), v(item.coverHUMedC), v(item.dun1MedC), v(item.dun2MedC), ''],
+            ['Width (mm)',            v(item.largura),     v(item.puMedL), v(item.huMedL), v(item.coverHUMedL), v(item.dun1MedL), v(item.dun2MedL), ''],
+            ['Height (mm)',           v(item.altura),      v(item.puMedA), v(item.huMedA), v(item.coverHUMedA), v(item.dun1MedA), v(item.dun2MedA), ''],
+            ['Tare Weight (kg)',      '', v(item.puPeso),  v(item.huPeso), v(item.coverHUPeso), '', '', ''],
+            ['Gross Weight (kg)',     '', v(item.puPesoBruto||item.brutoPU), v(item.huPesoBruto), '', '', '', ''],
+            ['Package Density (units)', '', v(item.pecasPorPU), pu, '', '', '', ''],
+            ['Qty dunnages / PU',    '', '', '', v(item.dun1QtyPerPU), v(item.dun2QtyPerPU), '', ''],
+            ['PU / layer of HU',     '', '', v(item.puPorCamada), '', '', '', ''],
+            ['Qty dunnages / HU',    '', '', '', v(item.dun1QtyPerHU), v(item.dun2QtyPerHU), '', ''],
+            ['Quantity PU / HU',     '', '', pu, '', '', '', ''],
+          ].map(([lbl, part, pu2, hu, cv, d1, d2, _], ri) => (
+            <tr key={ri} style={{ height: '3.5mm' }}>
+              <td className="c-lb">{lbl}</td>
+              <td className={ri < 2 ? 'c-gr' : 'c-vl'}>{part}</td>
+              <td className="c-vl">{pu2}</td>
+              <td className="c-vl">{hu}</td>
+              <td className="c-vl">{cv}</td>
+              <td className="c-vl">{d1}</td>
+              <td className="c-vl">{d2}</td>
+              <td style={{ border: 'none' }}></td>
+            </tr>
+          ))}
+          <tr style={{ height: '4mm' }}>
+            <td className="c-lb" style={{ fontSize: '5.5px', whiteSpace: 'normal' }}>Stackability (qty of levels per stack)</td>
+            <td className="c-gr"></td><td className="c-vl"></td><td className="c-vl"></td>
+            <td className="c-vl"></td><td className="c-vl"></td><td className="c-vl"></td>
+            <td className="c-gr" style={{ fontSize: '6px', whiteSpace: 'normal', border: '1px solid #000' }}>
+              Static: {v(item.empilhavelStatic)}&nbsp; Dynamic: {v(item.empilhavelDynamic)}
+            </td>
+          </tr>
+          <tr style={{ height: '3.5mm' }}>
+            <td colSpan={5} className="c-vl" style={{ border: 'none' }}></td>
+            <td className="c-lb">Foldable ratio</td>
+            <td className="c-vl" style={{ border: '1px solid #000' }}>{v(item.foldableRatio)}</td>
+            <td style={{ border: 'none' }}></td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* BACK-UP PICTURES */}
+      <table className="lt" style={{ flexShrink: 0 }}>
+        <colgroup>
+          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
+          <col style={{ width: '25%' }} /><col style={{ width: '25%' }} />
+        </colgroup>
+        <tbody>
+          <tr style={{ height: '50mm' }}>
+            {[item.imagemPart, item.imagemPU, item.imagemHU, item.imagemDunnage].map((img, i) => (
+              <td key={i} className="pic-cell">
+                {img && <img src={img} alt="" crossOrigin="anonymous" style={{ maxHeight: '48mm' }} />}
+              </td>
+            ))}
+          </tr>
+          <tr><td colSpan={4} className="c-bk sec">Back-up pictures</td></tr>
+        </tbody>
+      </table>
+
+      {/* BACK-UP REMARKS */}
+      <table className="lt" style={{ flexShrink: 0 }}>
+        <tbody>
+          <tr><td className="c-bk sec">Back-up remarks</td></tr>
+          <tr style={{ height: '10mm' }}>
+            <td className="c-vl" style={{ whiteSpace: 'normal', verticalAlign: 'top', fontSize: '6px', fontStyle: 'italic', color: '#444', padding: '1mm' }}>
+              (wrapping, thermo sealed bendings, multi-loop disposable packaging, kit, etc.)
+              {v(item.backupRemarks) && <span style={{ color: '#000', fontStyle: 'normal' }}> {v(item.backupRemarks)}</span>}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* SIGNATURES P2 */}
+      <table className="lt" style={{ flexShrink: 0 }}>
+        <colgroup>
+          <col style={{ width: '12%' }} /><col style={{ width: '13%' }} />
+          <col style={{ width: '12%' }} /><col style={{ width: '13%' }} />
+          <col style={{ width: '12%' }} /><col style={{ width: '13%' }} />
+          <col style={{ width: '13%' }} /><col style={{ width: '12%' }} />
+        </colgroup>
+        <tbody>
+          <tr><td colSpan={8} className="c-bk sec">Signatures</td></tr>
+          <tr style={{ height: '8mm' }}>
+            <td className="sig-label">Supplier Logistics</td><td className="sig-value sig-value-tall"></td>
+            <td className="sig-label">Faurecia plant Logistics</td><td className="sig-value sig-value-tall"></td>
+            <td className="sig-label">Faurecia plant Quality</td><td className="sig-value sig-value-tall"></td>
+            <td className="sig-label" style={{ whiteSpace: 'normal', fontSize: '5.5px' }}>Faurecia plant HSE<br />(for new packaging)</td>
+            <td className="sig-value sig-value-tall"></td>
+          </tr>
+          {['Position', 'Name', 'Date'].map(l => (
+            <tr key={l} style={{ height: '4mm' }}>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+              <td className="sig-label">{l}</td><td className="sig-value"></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div className="lpds-footer">
+        <span>Property of Faurecia — Internal Documentation.</span>
+        <span>FAU-F-PSG-2027 — issue 02 — 07/17</span>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────
+export default function LPDSPreview() {
+  const [params]  = useSearchParams();
+  const navigate  = useNavigate();
+  const itemId    = params.get('item');
+  const [items,   setItems]    = useState<Item[]>([]);
+  const [selId,   setSelId]    = useState(itemId || '');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const all = getItems();
+    setItems(all);
+    setProjects(getProjects());
+    if (!itemId && all.length > 0) setSelId(all[0].id);
+  }, [itemId]);
+
+  const item = items.find(i => i.id === selId);
+  const calc = item ? calculateFields(item) : null;
+  const proj = projects.find(p => p.projeto === item?.projeto || p.id === getActiveProjectId());
+  const logo = proj?.logoEmpresa || '';
+
+  // Exporta usando window.print() — respeita @media print e page-break-after
+  const handlePrint = () => window.print();
+
+  // Exporta via jsPDF capturando cada página individualmente
+  const handleDownload = async () => {
+    if (!rootRef.current || !item) return;
+    setBusy(true);
+    try {
+      const pages = rootRef.current.querySelectorAll<HTMLElement>('.lpds-page');
+      const [{ default: html2pdf }, { default: jsPDF }] = await Promise.all([
+        import('html2pdf.js'),
+        import('jspdf'),
+      ]);
+      const OPT = {
+        margin: [0, 0, 0, 0],
+        image: { type: 'jpeg' as const, quality: 0.99 },
+        html2canvas: {
+          scale: 3,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          width: 1122,   // 297mm @ 96dpi
+          height: 794,   // 210mm @ 96dpi
+          windowWidth: 1122,
+        },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'landscape' as const },
+      };
+      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' });
+      for (let i = 0; i < pages.length; i++) {
+        const img = await html2pdf().set(OPT).from(pages[i]).outputImg('dataurl');
+        if (i > 0) doc.addPage();
+        doc.addImage(img as string, 'JPEG', 0, 0, 297, 210);
+      }
+      doc.save(`LPDS_${item.partNumber || 'doc'}.pdf`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!item) {
+    return (
+      <div className="p-8">
+        <button onClick={() => navigate('/items')} className="flex items-center gap-2 text-slate-500 mb-6">
+          <ArrowLeft className="w-4 h-4" /> Voltar
+        </button>
+        <h1 className="text-2xl font-bold text-slate-800 mb-2">LPDS Preview</h1>
+        <p className="text-sm text-slate-400 mb-4">
+          {items.length === 0 ? 'Nenhum item cadastrado.' : 'Selecione um item para visualizar.'}
+        </p>
+        {items.length > 0 && (
+          <select value={selId} onChange={e => setSelId(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
+            <option value="">— selecione —</option>
+            {items.map(i => <option key={i.id} value={i.id}>{i.partNumber} — {i.partName}</option>)}
+          </select>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <style>{PRINT_CSS}</style>
+
+      {/* TOOLBAR */}
+      <div className="lpds-no-print flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/items')} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-slate-800">LPDS Preview</h1>
+            <p className="text-xs text-slate-500">{item.partNumber} — {item.partName}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <select value={selId} onChange={e => setSelId(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
+            {items.map(i => <option key={i.id} value={i.id}>{i.partNumber} — {i.partName}</option>)}
+          </select>
+          <button onClick={handlePrint}
+            className="px-4 py-2 rounded-lg text-sm font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50">
+            🖨️ Imprimir
+          </button>
+          <button onClick={handleDownload} disabled={busy}
+            className="flex items-center gap-2 bg-blue-900 hover:bg-blue-800 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+            <Download className="w-4 h-4" />
+            {busy ? 'Gerando…' : 'Baixar PDF'}
+          </button>
+        </div>
+      </div>
+
+      {/* PRINT AREA — 2 páginas A4 landscape separadas */}
+      <div ref={rootRef} className="lpds-root">
+        <PageOne item={item} calc={calc} logo={logo} />
+        <PageTwo item={item} calc={calc} logo={logo} />
+      </div>
+
+      <p className="lpds-no-print text-xs text-slate-400 mt-2 text-center">
+        A4 landscape — cada bloco = 1 página
+      </p>
+    </div>
   );
 }
