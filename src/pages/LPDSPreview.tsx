@@ -1,668 +1,305 @@
-import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Download } from 'lucide-react';
-import { Item, Project } from '../types';
-import { getItems, getProjects, getActiveProjectId } from '../utils/storage';
-import { calculateFields } from '../utils/calculations';
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LPDS - Etapa 1 - Cabeçalho Corrigido</title>
+  <style>
+    * { box-sizing: border-box; }
 
-// ─────────────────────────────────────────────────────
-// A4 landscape @96dpi = 1122 × 794px
-// ─────────────────────────────────────────────────────
-const PW   = 1122;
-const PH   = 794;
-const PAD  = 8;
-const BLUE = '#1a3a6b';
-const LG   = '#c8c8c8';  // light gray
-const BK   = '#000';
-const WH   = '#fff';
-const FONT = 'Arial, Helvetica, sans-serif';
-const BDR  = `1px solid ${BK}`;
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #e9e9e9;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #000;
+    }
 
-const PAGE: React.CSSProperties = {
-  width: PW, height: PH, padding: PAD,
-  boxSizing: 'border-box', background: WH,
-  overflow: 'hidden', fontFamily: FONT,
-  display: 'flex', flexDirection: 'column', gap: 2,
-};
+    .page-wrapper {
+      width: 1388px;
+      margin: 0 auto;
+      background: #fff;
+    }
 
-const T: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' };
+    .lpds-step-1 {
+      width: 1388px;
+      height: 160px;
+      border: 3px solid #000;
+      background: #fff;
+      overflow: hidden;
+    }
 
-// ── cell factories ──────────────────────────────────
-const c = (bg: string, extra: React.CSSProperties = {}): React.CSSProperties => ({
-  border: BDR, padding: '1px 3px', fontSize: 7,
-  lineHeight: '1.15', verticalAlign: 'middle',
-  overflow: 'hidden', whiteSpace: 'nowrap',
-  background: bg, ...extra,
-});
+    table {
+      border-collapse: collapse;
+      table-layout: fixed;
+      width: 100%;
+    }
 
-const LB = c(LG, { fontWeight: 700 });
-const VL = c(WH);
-const HD = c(BLUE, { color: WH, fontWeight: 700, textAlign: 'center', fontSize: 7.5 });
-const SEC = c(BK, { color: WH, fontWeight: 700, textAlign: 'center', fontSize: 8 });
+    td, th {
+      border: 1px solid #000;
+      padding: 0 4px;
+      vertical-align: middle;
+      line-height: 1;
+    }
 
-// ─────────────────────────────────────────────────────
-type Calc = ReturnType<typeof calculateFields> | null;
-const v = (x: unknown) => (x == null || x === '') ? '' : String(x);
+    .top-grid { height: 40px; }
 
-function Chk({ on }: { on: boolean }) {
-  return <span style={{ fontSize: 11, lineHeight: 1 }}>{on ? '☑' : '☐'}</span>;
-}
+    .logo-cell {
+      width: 198px;
+      height: 40px;
+      background: #fff;
+      text-align: left;
+      padding-left: 20px;
+      border-left: 0;
+      border-top: 0;
+    }
 
-function Footer() {
-  return (
-    <div style={{ borderTop: BDR, paddingTop: 1, marginTop: 'auto',
-      display: 'flex', justifyContent: 'space-between', fontSize: 6, color: '#555' }}>
-      <span>Property of Faurecia — Internal Documentation.</span>
-      <span>FAU-F-PSG-2027 — issue 02 — 07/17</span>
-    </div>
-  );
-}
+    .logo-text {
+      display: inline-block;
+      color: #24205f;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 4px;
+      transform: scaleX(1.22);
+      transform-origin: left center;
+    }
 
-// ─────────────────────────────────────────────────────
-// HEADER
-// ─────────────────────────────────────────────────────
-function Header({ title, ver, logo }: { title: string; ver: string; logo: string }) {
-  const now = new Date();
-  const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+    .title-cell {
+      height: 40px;
+      background: #062a68;
+      color: #fff;
+      text-align: center;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: .2px;
+      border-top: 0;
+      border-right: 0;
+    }
 
-  return (
-    <table style={{ ...T, marginBottom: 2 }}>
-      <colgroup>
-        <col style={{ width: 90 }} />   {/* Logo */}
-        <col style={{ width: 115 }} />  {/* Doc version label */}
-        <col style={{ width: 100 }} />  {/* Doc version value */}
-      </colgroup>
-      <tbody>
-        {/* Linha 1: Logo (rowSpan 2) | Título (colSpan 2) */}
-        <tr style={{ height: 35 }}>
-          <td rowSpan={2} style={{
-            border: BDR, background: WH,
-            textAlign: 'center', verticalAlign: 'middle', padding: 4,
-          }}>
-            {logo
-              ? <img src={logo} alt="" style={{ maxHeight: 42, maxWidth: 84, objectFit: 'contain' }} />
-              : <span style={{ fontWeight: 900, fontSize: 13, color: BLUE }}>·faurecia</span>}
+    .meta-grid { height: 24px; }
+
+    .meta-left-label {
+      width: 198px;
+      background: #d9d9d9;
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .meta-left-value {
+      width: 520px;
+      background: #fff;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .meta-gap {
+      width: 142px;
+      background: #fff;
+      border-left: 0;
+      border-right: 0;
+    }
+
+    .meta-date-label {
+      width: 151px;
+      background: #d9d9d9;
+      text-align: right;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .meta-date-value {
+      width: 371px;
+      background: #fff;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .body-row {
+      display: grid;
+      grid-template-columns: 718px 142px 522px;
+      height: 90px;
+    }
+
+    .left-block {
+      width: 718px;
+      height: 90px;
+      border-right: 1px solid #000;
+    }
+
+    .center-gap {
+      width: 142px;
+      height: 90px;
+      background: #fff;
+      border-left: 0;
+      border-right: 0;
+    }
+
+    .right-block {
+      width: 522px;
+      height: 90px;
+      border-left: 1px solid #000;
+    }
+
+    .info-table { height: 90px; }
+
+    .info-table td,
+    .info-table th {
+      height: 18px;
+      font-size: 12px;
+    }
+
+    .left-label {
+      width: 198px;
+      background: #bfbfbf;
+      text-align: right;
+      font-size: 10px !important;
+      font-weight: 700;
+    }
+
+    .left-value-a { width: 172px; }
+    .left-value-b { width: 180px; }
+    .left-value-c { width: 168px; }
+
+    .right-label {
+      width: 180px;
+      background: #bfbfbf;
+      text-align: right;
+      font-size: 10px !important;
+      font-weight: 700;
+    }
+
+    .right-value {
+      width: 342px;
+      background: #fff;
+      text-align: left;
+      font-size: 12px !important;
+    }
+
+    .section-title {
+      background: #000;
+      color: #fff;
+      text-align: center;
+      font-size: 16px !important;
+      font-weight: 800;
+      height: 20px !important;
+    }
+
+    .input-cell {
+      background: #fff;
+      text-align: left;
+      font-size: 12px !important;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .value-right { text-align: right; }
+
+    @media print {
+      body {
+        padding: 0;
+        background: #fff;
+      }
+
+      .page-wrapper { margin: 0; }
+
+      @page {
+        size: A4 landscape;
+        margin: 4mm;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page-wrapper">
+    <section class="lpds-step-1" aria-label="LPDS Etapa 1 - Cabeçalho corrigido">
+      <table class="top-grid">
+        <tr>
+          <td class="logo-cell">
+            <span class="logo-text">faurecia</span>
           </td>
-          <td colSpan={2} rowSpan={2} style={{
-            ...HD, fontSize: 15, fontWeight: 900, textAlign: 'center', letterSpacing: 0.3,
-          }}>
-            {title}
+          <td class="title-cell">
+            Packaging Data Sheet - Series (page 1/2)
           </td>
         </tr>
-        <tr style={{ height: 0 }} />
-      </tbody>
-    </table>
-  );
-}
+      </table>
 
-// Linha separada abaixo do cabeçalho: Document version | valor | espaço | Date | valor
-function HeaderInfo({ ver }: { ver: string }) {
-  const now = new Date();
-  const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-
-  return (
-    <table style={{ ...T, marginBottom: 2 }}>
-      <colgroup>
-        <col style={{ width: 115 }} />  {/* Doc version label */}
-        <col style={{ width: 160 }} />  {/* Doc version value */}
-        <col />                          {/* Espaço vazio */}
-        <col style={{ width: 115 }} />  {/* Date label */}
-        <col style={{ width: 160 }} />  {/* Date value */}
-      </colgroup>
-      <tbody>
-        <tr style={{ height: 14 }}>
-          <td style={{ ...LB, textAlign: 'right', paddingRight: 4, fontSize: 7 }}>Document version</td>
-          <td style={{ ...VL, textAlign: 'center', fontWeight: 700, fontSize: 8 }}>{ver}</td>
-          <td style={{ border: 'none', background: WH }} />
-          <td style={{ ...LB, textAlign: 'right', paddingRight: 4, fontSize: 7 }}>Date</td>
-          <td style={{ ...VL, fontSize: 7 }}>{date}</td>
+      <table class="meta-grid">
+        <tr>
+          <td class="meta-left-label">Document version</td>
+          <td class="meta-left-value">v1</td>
+          <td class="meta-gap"></td>
+          <td class="meta-date-label">Date</td>
+          <td class="meta-date-value">22/12/2023 16:41</td>
         </tr>
-      </tbody>
-    </table>
-  );
-}
-
-// ─────────────────────────────────────────────────────
-// PAGE 1
-// ─────────────────────────────────────────────────────
-function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string }) {
-  const pu = v(calc?.puPorHU);
-  const RH = 17; // row height px
-
-  return (
-    <div style={PAGE}>
-      <Header title="Packaging Data Sheet - Series (page 1/2)" ver={v(item.documentVersion)||'V1'} logo={logo} />
-      <HeaderInfo ver={v(item.documentVersion)||'V1'} />
-
-      {/* PART DESCRIPTION + SUPPLIER — fiel ao original */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width: '12%' }} /> {/* label esq */}
-          <col style={{ width: '24%' }} /> {/* valor part number / description */}
-          <col style={{ width: '9%'  }} /> {/* Program label */}
-          <col style={{ width: '9%'  }} /> {/* Program value */}
-          <col style={{ width: '9%'  }} /> {/* Daily consumption label */}
-          <col style={{ width: '9%'  }} /> {/* Daily consumption value */}
-          <col style={{ width: '13%' }} /> {/* Supplier label */}
-          <col style={{ width: '15%' }} /> {/* Supplier value */}
-        </colgroup>
-        <tbody>
-          {/* Títulos de seção */}
-          <tr style={{ height: 14 }}>
-            <td colSpan={6} style={{ ...SEC, fontSize: 8 }}>Part Description</td>
-            <td colSpan={2} style={{ ...SEC, fontSize: 8 }}>Supplier</td>
-          </tr>
-          {/* Linha 1: Part number | Program | Supplier name */}
-          <tr style={{ height: RH }}>
-            <td style={{ ...LB, textAlign: 'right' }}>Faurecia part number(s)</td>
-            <td style={VL} colSpan={3}>{v(item.partNumber)}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Program</td>
-            <td style={VL}>{v(item.projeto)}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Supplier name</td>
-            <td style={VL}>{v(item.fornecedor)}</td>
-          </tr>
-          {/* Linha 2: Description | Commodity | Supplier code */}
-          <tr style={{ height: RH }}>
-            <td style={{ ...LB, textAlign: 'right' }}>Description</td>
-            <td style={VL} colSpan={3}>{v(item.partName)}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Commodity</td>
-            <td style={VL}>{v(item.commodity)}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Supplier code</td>
-            <td style={VL}>{v(item.codFornecedor)}</td>
-          </tr>
-          {/* Linha 3: Program | Daily consumption | Valid for Faurecia plant */}
-          <tr style={{ height: RH }}>
-            <td style={{ ...LB, textAlign: 'right' }}>Program</td>
-            <td style={VL}>{v(item.projeto)}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Daily consumption</td>
-            <td style={VL}>{v(item.dailyConsumption)}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Part unit</td>
-            <td style={VL}>{v(item.partUnit)||'Part'}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Valid for Faurecia plant</td>
-            <td style={VL}>{v(item.validForPlant)}</td>
-          </tr>
-          {/* Linha 4: Commodity | Part unit | Start of use */}
-          <tr style={{ height: RH }}>
-            <td style={{ ...LB, textAlign: 'right' }}>Commodity</td>
-            <td style={VL}>{v(item.commodity)}</td>
-            <td style={{ ...LB, textAlign: 'right' }}>Part unit</td>
-            <td style={VL}>{v(item.partUnit)||'Part'}</td>
-            <td style={VL} colSpan={2}></td>
-            <td style={{ ...LB, textAlign: 'right' }}>Start of use</td>
-            <td style={VL}>{v(item.startOfUse)}</td>
-          </tr>
-        </tbody>
       </table>
 
-      {/* PACKAGING DATA */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width: '9%'  }}/><col style={{ width: '6%'  }}/>
-          <col style={{ width: '10%' }}/><col style={{ width: '5%'  }}/>
-          <col style={{ width: '3.5%'}}/><col style={{ width: '2.5%'}}/><col style={{ width: '2.5%'}}/>
-          <col style={{ width: '9%'  }}/><col style={{ width: '2.5%'}}/><col style={{ width: '2.5%'}}/>
-          <col style={{ width: '10%' }}/><col style={{ width: '6%'  }}/>
-          <col style={{ width: '4.5%'}}/><col style={{ width: '17%' }}/>
-        </colgroup>
-        <tbody>
-          <tr style={{ height: 14 }}><td colSpan={14} style={SEC}>Packaging data</td></tr>
-          {/* linha 1 */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Serial packaging</td><td style={VL}>{v(item.serialPackaging)}</td>
-            <td style={LB}>Total packaging loop</td><td style={VL}>{v(item.totalPackagingLoop)}</td>
-            <td style={LB}>days</td>
-            <td style={{ ...LB, textAlign:'center', fontSize:6 }}>yes</td>
-            <td style={{ ...LB, textAlign:'center', fontSize:6 }}>no</td>
-            <td style={{ ...LB, textAlign:'right' }}>Reusable packaging</td>
-            <td style={{ ...VL, textAlign:'center' }}><Chk on={item.reusablePackaging}/></td>
-            <td style={{ ...VL, textAlign:'center' }}><Chk on={!item.reusablePackaging}/></td>
-            <td style={LB}>- Delivery frequency</td><td style={VL}>{v(item.deliveryFrequency)}</td>
-            <td style={{ ...LB, fontSize:6 }}>per week</td><td style={VL}></td>
-          </tr>
-          {/* linha 2 */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Back-up packaging</td><td style={VL}></td>
-            <td style={LB}>Packaging stock at supplier</td><td style={VL}>{v(item.packagingStockSupplier)}</td>
-            <td style={LB}>days</td><td style={VL}></td><td style={VL}></td>
-            <td style={{ ...LB, textAlign:'right' }}>Rented packaging</td>
-            <td style={{ ...VL, textAlign:'center' }}><Chk on={item.rentedPackaging}/></td>
-            <td style={{ ...VL, textAlign:'center' }}><Chk on={!item.rentedPackaging}/></td>
-            <td style={LB}>- Return frequency</td><td style={VL}>{v(item.returnFrequency)}</td>
-            <td style={{ ...LB, fontSize:6 }}>per week</td><td style={VL}></td>
-          </tr>
-          {/* linha 3 */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Box label standard</td><td style={VL}></td>
-            <td style={LB}>Total number of PU</td><td style={VL}>{v(item.totalPU)}</td>
-            <td style={VL}></td>
-            <td colSpan={2} style={{ ...LB, textAlign:'center', fontSize:6 }}>If "yes", rental company</td>
-            <td style={{ ...LB, textAlign:'right' }}>Mixed pallet</td>
-            <td style={{ ...VL, textAlign:'center' }}><Chk on={item.mixedPallet}/></td>
-            <td style={{ ...VL, textAlign:'center' }}><Chk on={!item.mixedPallet}/></td>
-            <td colSpan={4} style={VL}>{v(item.rentalCompany)}</td>
-          </tr>
-          {/* linha 4 */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Box label qty / PU</td><td style={VL}>{v(item.boxLabelQty)}</td>
-            <td colSpan={2} style={LB}>Calculation based on:</td>
-            <td colSpan={3} style={LB}>Minimum Order Quantity (in units)</td>
-            <td style={VL}>{v(item.moq)}</td>
-            <td colSpan={6} style={VL}></td>
-          </tr>
-          <tr style={{ height: RH }}>
-            <td colSpan={2} style={VL}></td><td colSpan={2} style={VL}></td>
-            <td colSpan={3} style={LB}>Order Lot size (in units)</td>
-            <td style={VL}>{v(item.orderLotSize)}</td>
-            <td colSpan={6} style={VL}></td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* TABELA PRINCIPAL — 8 colunas contínuas */}
-      {/* Col 8 (extras) fica junto: 
-          linhas 0-6: vazia
-          linha 7 (Pkg Density): "Qty dunnages / PU"
-          linha 8 (PU/layer):    "Qty dunnages / HU"
-          linha 9 (Qty PU/HU):   vazia
-          linha 10 (Stackability): Static/Dynamic
-          linha 11 (Foldable):   label+value */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width: '13%' }}/>
-          <col style={{ width: '10.5%' }}/>
-          <col style={{ width: '10.5%' }}/>
-          <col style={{ width: '10.5%' }}/>
-          <col style={{ width: '10.5%' }}/>
-          <col style={{ width: '10.5%' }}/>
-          <col style={{ width: '10.5%' }}/>
-          <col style={{ width: '24%' }}/>
-        </colgroup>
-        <tbody>
-          <tr style={{ height: 20 }}>
-            <td style={HD}></td>
-            <td style={HD}>Part</td>
-            <td style={HD}>Packaging Unit = PU</td>
-            <td style={HD}>Handling Unit = HU</td>
-            <td style={HD}>Dunnage 1</td>
-            <td style={HD}>Dunnage 2</td>
-            <td style={HD}>Dunnage 3</td>
-            <td style={{ ...HD, background: WH, border: 'none' }}></td>
-          </tr>
-          {/* rows 0-6: coluna Part fica cinza (dados já estão na seção Part Description acima) */}
-          {([
-            ['Faurecia part number', v(item.puCode),
-              v(item.huMedC)?`TM${v(item.huMedC)}`:'',
-              v(item.dun1Code), v(item.dun2Code), v(item.dun3Code)],
-            ['Description', v(item.puDesc),
-              v(item.huMedC)&&v(item.huMedL)&&v(item.huMedA)?`${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}`:'',
-              v(item.dun1Desc), v(item.dun2Desc), v(item.dun3Desc)],
-            ['Length (mm)',  v(item.puMedC), v(item.huMedC), v(item.dun1MedC), v(item.dun2MedC), v(item.dun3MedC)],
-            ['Width (mm)',   v(item.puMedL), v(item.huMedL), v(item.dun1MedL), v(item.dun2MedL), v(item.dun3MedL)],
-            ['Height (mm)',  v(item.puMedA), v(item.huMedA), v(item.dun1MedA), v(item.dun2MedA), v(item.dun3MedA)],
-            ['Tare Weight (kg)',  v(item.puPeso),      v(item.huPeso),      '', '', ''],
-            ['Gross Weight (kg)', v(item.puPesoBruto), v(item.huPesoBruto), '', '', ''],
-          ] as string[][]).map((row, ri) => (
-            <tr key={ri} style={{ height: RH }}>
-              <td style={LB}>{row[0]}</td>
-              <td style={LB}></td>  {/* coluna Part — cinza, sem dados */}
-              {row.slice(1).map((val,ci)=><td key={ci} style={VL}>{val}</td>)}
-              <td style={{ border:'none' }}></td>
+      <div class="body-row">
+        <div class="left-block">
+          <table class="info-table">
+            <tr>
+              <th class="section-title" colspan="4">Part Description</th>
             </tr>
-          ))}
-          {/* Package Density */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Package Density (units)</td>
-            <td style={LB}></td>
-            <td style={VL}>{v(item.pecasPorPU)}</td><td style={VL}>{pu}</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ border:'none' }}></td>
-          </tr>
-          {/* Qty dunnages / PU */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Qty dunnages / PU</td>
-            <td style={LB}></td><td style={VL}></td><td style={VL}></td>
-            <td style={VL}>{v(item.dun1QtyPerPU)}</td>
-            <td style={VL}>{v(item.dun2QtyPerPU)}</td>
-            <td style={VL}>{v(item.dun3QtyPerPU)}</td>
-            <td style={{ border:'none' }}></td>
-          </tr>
-          {/* PU/layer */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>PU / layer of HU</td>
-            <td style={LB}></td>
-            <td style={VL}></td><td style={VL}>{v(item.puPorCamada)}</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ border:'none' }}></td>
-          </tr>
-          {/* Qty dunnages / HU */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Qty dunnages / HU</td>
-            <td style={LB}></td><td style={VL}></td><td style={VL}></td>
-            <td style={VL}>{v(item.dun1QtyPerHU)}</td>
-            <td style={VL}>{v(item.dun2QtyPerHU)}</td>
-            <td style={VL}>{v(item.dun3QtyPerHU)}</td>
-            <td style={{ border:'none' }}></td>
-          </tr>
-          {/* Quantity PU/HU */}
-          <tr style={{ height: RH }}>
-            <td style={LB}>Quantity PU / HU</td>
-            <td style={LB}></td><td style={VL}></td><td style={VL}>{pu}</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ border:'none' }}></td>
-          </tr>
-          {/* Stackability */}
-          <tr style={{ height: RH + 2 }}>
-            <td style={{ ...LB, whiteSpace:'normal', fontSize:6 }}>Stackability (qty of levels per stack)</td>
-            <td style={LB}></td><td style={VL}></td><td style={VL}></td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ ...c(WH), border: BDR, fontSize:6.5, whiteSpace:'normal' }}>
-              Static: {v(item.empilhavelStatic)}&nbsp;&nbsp;Dynamic: {v(item.empilhavelDynamic)}
-            </td>
-          </tr>
-          {/* Foldable */}
-          <tr style={{ height: RH }}>
-            <td style={VL} colSpan={6}></td>
-            <td style={LB}>Foldable ratio</td>
-            <td style={{ ...VL, border: BDR }}>{v(item.foldableRatio)}</td>
-          </tr>
-        </tbody>
-      </table>
 
-      {/* PICTURES */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-        </colgroup>
-        <tbody>
-          <tr style={{ height: 120 }}>
-            {[item.imagemPart,item.imagemPU,item.imagemHU,item.imagemDunnage].map((img,i)=>(
-              <td key={i} style={{ ...VL, textAlign:'center', verticalAlign:'middle', padding:3 }}>
-                {img&&<img src={img} alt="" crossOrigin="anonymous"
-                  style={{ maxHeight:114, maxWidth:'100%', objectFit:'contain', display:'block', margin:'0 auto' }}/>}
-              </td>
-            ))}
-          </tr>
-          <tr><td colSpan={4} style={SEC}>Pictures</td></tr>
-        </tbody>
-      </table>
-
-      {/* REMARKS */}
-      <table style={T}>
-        <tbody>
-          <tr><td style={SEC}>Remarks</td></tr>
-          <tr style={{ height:28 }}>
-            <td style={{ ...VL, whiteSpace:'normal', verticalAlign:'top', padding:'2px 4px' }}>{v(item.remarks)}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* SIGNATURES */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-        </colgroup>
-        <tbody>
-          <tr><td colSpan={4} style={SEC}>Signatures</td></tr>
-          <tr style={{ height:16 }}>
-            <td style={LB}>Supplier Logistics</td>
-            <td style={LB}>Faurecia plant Logistics</td>
-            <td style={LB}>Faurecia plant Quality</td>
-            <td style={{ ...LB, whiteSpace:'normal', fontSize:6 }}>Faurecia plant HSE (for new packaging)</td>
-          </tr>
-          {['Position','Name','Date'].map(l=>(
-            <tr key={l} style={{ height:16 }}>
-              {[0,1,2,3].map(i=><td key={i} style={{ ...VL, fontSize:6.5 }}>{l}</td>)}
+            <tr>
+              <td class="left-label">Faurecia part number(s)</td>
+              <td class="input-cell" colspan="3">434802201xxx</td>
             </tr>
-          ))}
-        </tbody>
-      </table>
 
-      <Footer/>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────
-// PAGE 2
-// ─────────────────────────────────────────────────────
-function PageTwo({ item, calc, logo }: { item: Item; calc: Calc; logo: string }) {
-  const pu = v(calc?.puPorHU);
-  const RH = 17;
-
-  return (
-    <div style={PAGE}>
-      <Header title="Packaging Data Sheet - Back up (page 2/2)" ver={v(item.documentVersion)||'V1'} logo={logo} />
-      <HeaderInfo ver={v(item.documentVersion)||'V1'} />
-
-      {/* BACK-UP PACKAGING DATA */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width:'13%' }}/>
-          <col style={{ width:'10%' }}/><col style={{ width:'10%' }}/>
-          <col style={{ width:'10%' }}/><col style={{ width:'10%' }}/>
-          <col style={{ width:'10%' }}/><col style={{ width:'10%' }}/>
-          <col style={{ width:'17%' }}/>
-        </colgroup>
-        <tbody>
-          <tr style={{ height:14 }}><td colSpan={8} style={SEC}>Back-up packaging data</td></tr>
-          <tr style={{ height:20 }}>
-            <td style={HD}></td>
-            <td style={HD}>Part</td><td style={HD}>Packaging Unit = PU</td>
-            <td style={HD}>Handling Unit = HU</td><td style={HD}>Cover for HU</td>
-            <td style={HD}>Dunnage 1</td><td style={HD}>Dunnage 2</td>
-            <td style={{ ...HD, background:WH, border:'none' }}></td>
-          </tr>
-          {([
-            ['Faurecia part number', v(item.partNumber), v(item.puCode),
-              v(item.huMedC)?`TM${v(item.huMedC)}`:'',
-              v(item.coverHUCode), v(item.dun1Code), v(item.dun2Code)],
-            ['Description', v(item.partName), v(item.puDesc),
-              v(item.huMedC)&&v(item.huMedL)&&v(item.huMedA)?`${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}`:'',
-              v(item.coverHUDesc), v(item.dun1Desc), v(item.dun2Desc)],
-            ['Length (mm)',  v(item.comprimento), v(item.puMedC), v(item.huMedC), v(item.coverHUMedC), v(item.dun1MedC), v(item.dun2MedC)],
-            ['Width (mm)',   v(item.largura),     v(item.puMedL), v(item.huMedL), v(item.coverHUMedL), v(item.dun1MedL), v(item.dun2MedL)],
-            ['Height (mm)',  v(item.altura),      v(item.puMedA), v(item.huMedA), v(item.coverHUMedA), v(item.dun1MedA), v(item.dun2MedA)],
-            ['Tare Weight (kg)',   v(item.peso),    v(item.puPeso),      v(item.huPeso),      v(item.coverHUPeso), '', ''],
-            ['Gross Weight (kg)',  v(item.brutoPU), v(item.puPesoBruto), v(item.huPesoBruto), '', '', ''],
-            ['Package Density (units)', '', v(item.pecasPorPU), pu, '', '', ''],
-            ['Qty dunnages / PU',       '', '',                  '', v(item.dun1QtyPerPU), v(item.dun2QtyPerPU), ''],
-            ['PU / layer of HU',  v(item.puPorCamada), '', '', '', '', ''],
-            ['Qty dunnages / HU',       '', '',                  '', v(item.dun1QtyPerHU), v(item.dun2QtyPerHU), ''],
-            ['Quantity PU / HU',  v(item.puPorCamada), '', pu, '', '', ''],
-          ] as string[][]).map((row,ri)=>(
-            <tr key={ri} style={{ height:RH }}>
-              <td style={LB}>{row[0]}</td>
-              {row.slice(1).map((val,ci)=><td key={ci} style={VL}>{val}</td>)}
-              <td style={{ border: ri===1||ri===3 ? 'none':'none',
-                ...LB, whiteSpace:'normal', fontSize:6.5 }}>
-                {''}
-              </td>
+            <tr>
+              <td class="left-label">Description</td>
+              <td class="input-cell" colspan="3">551 CC CAPA TEC SEDOSO/ LINHA CINZA</td>
             </tr>
-          ))}
-          <tr style={{ height:RH+2 }}>
-            <td style={{ ...LB, whiteSpace:'normal', fontSize:6 }}>Stackability (qty of levels per stack)</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
-            <td style={{ ...c(WH), border:BDR, fontSize:6.5, whiteSpace:'normal' }}>
-              Static: {v(item.empilhavelStatic)}&nbsp;&nbsp;Dynamic: {v(item.empilhavelDynamic)}
-            </td>
-          </tr>
-          <tr style={{ height:RH }}>
-            <td colSpan={5} style={VL}></td>
-            <td style={LB}>Foldable ratio</td>
-            <td style={VL}>{v(item.foldableRatio)}</td>
-            <td style={{ border:'none' }}></td>
-          </tr>
-        </tbody>
-      </table>
 
-      {/* BACK-UP PICTURES */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-        </colgroup>
-        <tbody>
-          <tr style={{ height:220 }}>
-            {[item.imagemPart,item.imagemPU,item.imagemHU,item.imagemDunnage].map((img,i)=>(
-              <td key={i} style={{ ...VL, textAlign:'center', verticalAlign:'middle', padding:4 }}>
-                {img&&<img src={img} alt="" crossOrigin="anonymous"
-                  style={{ maxHeight:214, maxWidth:'100%', objectFit:'contain', display:'block', margin:'0 auto' }}/>}
-              </td>
-            ))}
-          </tr>
-          <tr><td colSpan={4} style={SEC}>Back-up pictures</td></tr>
-        </tbody>
-      </table>
-
-      {/* BACK-UP REMARKS */}
-      <table style={T}>
-        <tbody>
-          <tr><td style={SEC}>Back-up remarks</td></tr>
-          <tr style={{ height:34 }}>
-            <td style={{ ...VL, whiteSpace:'normal', verticalAlign:'top', padding:'2px 4px',
-              fontSize:6.5, fontStyle:'italic', color:'#555' }}>
-              (wrapping, thermo sealed bendings, multi-loop disposable packaging, kit, etc.)
-              {v(item.backupRemarks)&&
-                <span style={{ color:BK, fontStyle:'normal' }}> {v(item.backupRemarks)}</span>}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* SIGNATURES */}
-      <table style={T}>
-        <colgroup>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-          <col style={{ width:'25%' }}/><col style={{ width:'25%' }}/>
-        </colgroup>
-        <tbody>
-          <tr><td colSpan={4} style={SEC}>Signatures</td></tr>
-          <tr style={{ height:16 }}>
-            <td style={LB}>Supplier Logistics</td>
-            <td style={LB}>Faurecia plant Logistics</td>
-            <td style={LB}>Faurecia plant Quality</td>
-            <td style={{ ...LB, whiteSpace:'normal', fontSize:6 }}>Faurecia plant HSE (for new packaging)</td>
-          </tr>
-          {['Position','Name','Date'].map(l=>(
-            <tr key={l} style={{ height:16 }}>
-              {[0,1,2,3].map(i=><td key={i} style={{ ...VL, fontSize:6.5 }}>{l}</td>)}
+            <tr>
+              <td class="left-label">Program</td>
+              <td class="input-cell left-value-a">551</td>
+              <td class="left-label left-value-b">Daily consumption</td>
+              <td class="input-cell left-value-c"></td>
             </tr>
-          ))}
-        </tbody>
-      </table>
 
-      <Footer/>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────
-// MAIN
-// ─────────────────────────────────────────────────────
-export default function LPDSPreview() {
-  const [params]  = useSearchParams();
-  const navigate  = useNavigate();
-  const itemId    = params.get('item');
-  const [items,   setItems]     = useState<Item[]>([]);
-  const [selId,   setSelId]     = useState(itemId||'');
-  const [projects,setProjects]  = useState<Project[]>([]);
-  const p1 = useRef<HTMLDivElement>(null);
-  const p2 = useRef<HTMLDivElement>(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(()=>{
-    const all = getItems();
-    setItems(all);
-    setProjects(getProjects());
-    if(!itemId && all.length>0) setSelId(all[0].id);
-  },[itemId]);
-
-  const item = items.find(i=>i.id===selId);
-  const calc = item ? calculateFields(item) : null;
-  const proj = projects.find(p=>p.projeto===item?.projeto||p.id===getActiveProjectId());
-  const logo = proj?.logoEmpresa||'';
-
-  const download = async ()=>{
-    if(!p1.current||!p2.current||!item) return;
-    setBusy(true);
-    try{
-      const [{default:h2p},{default:jsPDF}] = await Promise.all([
-        import('html2pdf.js'), import('jspdf'),
-      ]);
-      const OPT = {
-        margin:[0,0,0,0],
-        image:{ type:'jpeg' as const, quality:0.98 },
-        html2canvas:{ scale:2, useCORS:true, backgroundColor:'#ffffff', logging:false },
-        jsPDF:{ unit:'mm' as const, format:'a4' as const, orientation:'landscape' as const },
-      };
-      const i1 = await h2p().set(OPT).from(p1.current).outputImg('dataurl');
-      const i2 = await h2p().set(OPT).from(p2.current).outputImg('dataurl');
-      const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });
-      doc.addImage(i1 as string,'JPEG',0,0,297,210);
-      doc.addPage();
-      doc.addImage(i2 as string,'JPEG',0,0,297,210);
-      doc.save(`LPDS_${item.partNumber||'doc'}.pdf`);
-    }finally{ setBusy(false); }
-  };
-
-  if(!item) return (
-    <div className="p-8">
-      <button onClick={()=>navigate('/items')} className="flex items-center gap-2 text-slate-500 mb-6">
-        <ArrowLeft className="w-4 h-4"/> Voltar
-      </button>
-      <h1 className="text-2xl font-bold text-slate-800 mb-2">LPDS Preview</h1>
-      <p className="text-sm text-slate-400 mb-4">
-        {items.length===0?'Nenhum item cadastrado.':'Selecione um item para visualizar.'}
-      </p>
-      {items.length>0&&(
-        <select value={selId} onChange={e=>setSelId(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
-          <option value="">— selecione —</option>
-          {items.map(i=><option key={i.id} value={i.id}>{i.partNumber} — {i.partName}</option>)}
-        </select>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="p-6">
-      {/* toolbar */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <button onClick={()=>navigate('/items')} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100">
-            <ArrowLeft className="w-5 h-5"/>
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">LPDS Preview</h1>
-            <p className="text-xs text-slate-500">{item.partNumber} — {item.partName}</p>
-          </div>
+            <tr>
+              <td class="left-label">Commodity</td>
+              <td class="input-cell left-value-a"></td>
+              <td class="left-label left-value-b">Part unit</td>
+              <td class="input-cell left-value-c value-right">Part</td>
+            </tr>
+          </table>
         </div>
-        <div className="flex items-center gap-3">
-          <select value={selId} onChange={e=>setSelId(e.target.value)} className="border rounded-lg px-3 py-2 text-sm">
-            {items.map(i=><option key={i.id} value={i.id}>{i.partNumber} — {i.partName}</option>)}
-          </select>
-          <button onClick={download} disabled={busy}
-            className="flex items-center gap-2 bg-blue-900 hover:bg-blue-800 disabled:opacity-60 text-white px-4 py-2 rounded-lg text-sm font-semibold">
-            <Download className="w-4 h-4"/>
-            {busy?'Gerando PDF…':'Baixar PDF'}
-          </button>
+
+        <div class="center-gap"></div>
+
+        <div class="right-block">
+          <table class="info-table">
+            <tr>
+              <th class="section-title" colspan="2">Supplier</th>
+            </tr>
+
+            <tr>
+              <td class="right-label">Supplier name</td>
+              <td class="right-value">FAURECIA AUTOMOTIVE DO BRASIL SJP</td>
+            </tr>
+
+            <tr>
+              <td class="right-label">Supplier code</td>
+              <td class="right-value">1021000000</td>
+            </tr>
+
+            <tr>
+              <td class="right-label">Valid for Faurecia plant</td>
+              <td class="right-value">FMM GOIANA - PERNAMBUCO</td>
+            </tr>
+
+            <tr>
+              <td class="right-label">Start of use</td>
+              <td class="right-value">2023</td>
+            </tr>
+          </table>
         </div>
       </div>
-
-      {/* preview */}
-      <div style={{ overflowX:'auto', background:'#aaa', padding:12, borderRadius:8 }}>
-        <div style={{ display:'flex', flexDirection:'column', gap:12, width:PW }}>
-          <div ref={p1} style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.35)' }}>
-            <PageOne item={item} calc={calc} logo={logo}/>
-          </div>
-          <div ref={p2} style={{ boxShadow:'0 2px 12px rgba(0,0,0,0.35)' }}>
-            <PageTwo item={item} calc={calc} logo={logo}/>
-          </div>
-        </div>
-      </div>
-      <p className="text-xs text-slate-400 mt-2 text-center">A4 landscape — cada bloco = 1 página do PDF</p>
-    </div>
-  );
-}
+    </section>
+  </main>
+</body>
+</html>
