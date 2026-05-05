@@ -288,22 +288,23 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
             <td style={HD}>Dunnage 3</td>
             <td style={{ ...HD, background: WH, border: 'none' }}></td>
           </tr>
-          {/* rows 0-6: dados + col 8 vazia */}
+          {/* rows 0-6: coluna Part fica cinza (dados já estão na seção Part Description acima) */}
           {([
-            ['Faurecia part number', v(item.partNumber), v(item.puCode),
+            ['Faurecia part number', v(item.puCode),
               v(item.huMedC)?`TM${v(item.huMedC)}`:'',
               v(item.dun1Code), v(item.dun2Code), v(item.dun3Code)],
-            ['Description', v(item.partName), v(item.puDesc),
+            ['Description', v(item.puDesc),
               v(item.huMedC)&&v(item.huMedL)&&v(item.huMedA)?`${v(item.huMedC)}x${v(item.huMedL)}x${v(item.huMedA)}`:'',
               v(item.dun1Desc), v(item.dun2Desc), v(item.dun3Desc)],
-            ['Length (mm)',  v(item.comprimento), v(item.puMedC), v(item.huMedC), v(item.dun1MedC), v(item.dun2MedC), v(item.dun3MedC)],
-            ['Width (mm)',   v(item.largura),     v(item.puMedL), v(item.huMedL), v(item.dun1MedL), v(item.dun2MedL), v(item.dun3MedL)],
-            ['Height (mm)',  v(item.altura),      v(item.puMedA), v(item.huMedA), v(item.dun1MedA), v(item.dun2MedA), v(item.dun3MedA)],
-            ['Tare Weight (kg)',   v(item.peso),    v(item.puPeso),      v(item.huPeso),      '', '', ''],
-            ['Gross Weight (kg)',  v(item.brutoPU), v(item.puPesoBruto), v(item.huPesoBruto), '', '', ''],
+            ['Length (mm)',  v(item.puMedC), v(item.huMedC), v(item.dun1MedC), v(item.dun2MedC), v(item.dun3MedC)],
+            ['Width (mm)',   v(item.puMedL), v(item.huMedL), v(item.dun1MedL), v(item.dun2MedL), v(item.dun3MedL)],
+            ['Height (mm)',  v(item.puMedA), v(item.huMedA), v(item.dun1MedA), v(item.dun2MedA), v(item.dun3MedA)],
+            ['Tare Weight (kg)',  v(item.puPeso),      v(item.huPeso),      '', '', ''],
+            ['Gross Weight (kg)', v(item.puPesoBruto), v(item.huPesoBruto), '', '', ''],
           ] as string[][]).map((row, ri) => (
             <tr key={ri} style={{ height: RH }}>
               <td style={LB}>{row[0]}</td>
+              <td style={LB}></td>  {/* coluna Part — cinza, sem dados */}
               {row.slice(1).map((val,ci)=><td key={ci} style={VL}>{val}</td>)}
               <td style={{ border:'none' }}></td>
             </tr>
@@ -311,14 +312,15 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
           {/* Package Density */}
           <tr style={{ height: RH }}>
             <td style={LB}>Package Density (units)</td>
-            <td style={VL}></td><td style={VL}>{v(item.pecasPorPU)}</td><td style={VL}>{pu}</td>
+            <td style={LB}></td>
+            <td style={VL}>{v(item.pecasPorPU)}</td><td style={VL}>{pu}</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
             <td style={{ border:'none' }}></td>
           </tr>
-          {/* Qty dunnages / PU — label à esquerda, valores nas colunas Dunnage */}
+          {/* Qty dunnages / PU */}
           <tr style={{ height: RH }}>
             <td style={LB}>Qty dunnages / PU</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
+            <td style={LB}></td><td style={VL}></td><td style={VL}></td>
             <td style={VL}>{v(item.dun1QtyPerPU)}</td>
             <td style={VL}>{v(item.dun2QtyPerPU)}</td>
             <td style={VL}>{v(item.dun3QtyPerPU)}</td>
@@ -327,14 +329,15 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
           {/* PU/layer */}
           <tr style={{ height: RH }}>
             <td style={LB}>PU / layer of HU</td>
-            <td style={VL}>{v(item.puPorCamada)}</td><td style={VL}></td><td style={VL}></td>
+            <td style={LB}></td>
+            <td style={VL}></td><td style={VL}>{v(item.puPorCamada)}</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
             <td style={{ border:'none' }}></td>
           </tr>
-          {/* Qty dunnages / HU — label à esquerda, valores nas colunas Dunnage */}
+          {/* Qty dunnages / HU */}
           <tr style={{ height: RH }}>
             <td style={LB}>Qty dunnages / HU</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
+            <td style={LB}></td><td style={VL}></td><td style={VL}></td>
             <td style={VL}>{v(item.dun1QtyPerHU)}</td>
             <td style={VL}>{v(item.dun2QtyPerHU)}</td>
             <td style={VL}>{v(item.dun3QtyPerHU)}</td>
@@ -343,14 +346,14 @@ function PageOne({ item, calc, logo }: { item: Item; calc: Calc; logo: string })
           {/* Quantity PU/HU */}
           <tr style={{ height: RH }}>
             <td style={LB}>Quantity PU / HU</td>
-            <td style={VL}>{v(item.puPorCamada)}</td><td style={VL}></td><td style={VL}>{pu}</td>
+            <td style={LB}></td><td style={VL}></td><td style={VL}>{pu}</td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
             <td style={{ border:'none' }}></td>
           </tr>
           {/* Stackability */}
           <tr style={{ height: RH + 2 }}>
             <td style={{ ...LB, whiteSpace:'normal', fontSize:6 }}>Stackability (qty of levels per stack)</td>
-            <td style={VL}></td><td style={VL}></td><td style={VL}></td>
+            <td style={LB}></td><td style={VL}></td><td style={VL}></td>
             <td style={VL}></td><td style={VL}></td><td style={VL}></td>
             <td style={{ ...c(WH), border: BDR, fontSize:6.5, whiteSpace:'normal' }}>
               Static: {v(item.empilhavelStatic)}&nbsp;&nbsp;Dynamic: {v(item.empilhavelDynamic)}
