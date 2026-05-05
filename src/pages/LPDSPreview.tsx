@@ -65,28 +65,79 @@ function Header({ title, ver, logo }: { title: string; ver: string; logo: string
   const now = new Date();
   const date = `${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
 
+  // Dimensões fiéis ao original:
+  // Linha 1 (Document version): altura maior ~35px
+  // Linha 2 (Date): altura menor ~15px
+  // Total cabeçalho: ~50px
+  // Coluna direita: label ~110px + valor ~100px
+
   return (
-    <table style={{ ...T, marginBottom: 2 }}>
+    <table style={{ ...T, marginBottom: 2, height: 50 }}>
       <colgroup>
-        <col style={{ width: 88 }} />
-        <col />
-        <col style={{ width: 110 }} />
-        <col style={{ width: 90 }} />
+        <col style={{ width: 90 }} />   {/* Logo */}
+        <col />                          {/* Título */}
+        <col style={{ width: 115 }} />  {/* Label (Document version / Date) */}
+        <col style={{ width: 100 }} />  {/* Valor */}
       </colgroup>
       <tbody>
-        <tr style={{ height: 33 }}>
-          <td rowSpan={2} style={{ ...c(WH, { textAlign: 'center', padding: 3, verticalAlign: 'middle' }), border: BDR }}>
+        {/* Linha 1: Document version */}
+        <tr style={{ height: 35 }}>
+          <td rowSpan={2} style={{
+            border: BDR,
+            background: WH,
+            textAlign: 'center',
+            verticalAlign: 'middle',
+            padding: 4,
+          }}>
             {logo
-              ? <img src={logo} alt="" style={{ maxHeight: 44, maxWidth: 82, objectFit: 'contain' }} />
-              : <span style={{ fontWeight: 900, fontSize: 12, color: BLUE }}>·faurecia</span>}
+              ? <img src={logo} alt="" style={{ maxHeight: 42, maxWidth: 84, objectFit: 'contain' }} />
+              : <span style={{ fontWeight: 900, fontSize: 13, color: BLUE, fontFamily: FONT }}>·faurecia</span>
+            }
           </td>
-          <td rowSpan={2} style={{ ...HD, fontSize: 14, fontWeight: 900, textAlign: 'center' }}>{title}</td>
-          <td style={{ ...LB, fontSize: 7 }}>Document version</td>
-          <td style={{ ...VL, fontSize: 7 }}>{ver}</td>
+          <td rowSpan={2} style={{
+            ...HD,
+            fontSize: 15,
+            fontWeight: 900,
+            textAlign: 'center',
+            letterSpacing: 0.3,
+          }}>
+            {title}
+          </td>
+          <td style={{
+            ...LB,
+            fontSize: 7,
+            textAlign: 'right',
+            paddingRight: 4,
+            borderBottom: BDR,
+          }}>
+            Document version
+          </td>
+          <td style={{
+            ...VL,
+            fontSize: 8,
+            textAlign: 'center',
+            fontWeight: 700,
+            borderBottom: BDR,
+          }}>
+            {ver}
+          </td>
         </tr>
-        <tr style={{ height: 17 }}>
-          <td style={{ ...LB, fontSize: 7 }}>Date</td>
-          <td style={{ ...VL, fontSize: 7 }}>{date}</td>
+        {/* Linha 2: Date */}
+        <tr style={{ height: 15 }}>
+          <td style={{
+            ...LB,
+            fontSize: 7,
+            textAlign: 'right',
+            paddingRight: 4,
+          }}>
+            Date
+          </td>
+          <td style={{
+            ...VL,
+            fontSize: 7,
+          }}>
+            {date}
+          </td>
         </tr>
       </tbody>
     </table>
