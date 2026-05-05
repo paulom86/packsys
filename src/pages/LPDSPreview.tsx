@@ -63,30 +63,33 @@ function Footer() {
 // ─────────────────────────────────────────────────────
 function Header({ title, ver, date, logo }: { title: string; ver: string; date: string; logo: string }) {
   return (
-    <table style={{ ...T, height: 50, marginBottom: 2 }}>
+    <table style={{ ...T, marginBottom: 2 }}>
       <colgroup>
-        <col style={{ width: 88 }} /><col /><col style={{ width: 175 }} />
+        {/* Logo */}
+        <col style={{ width: 88 }} />
+        {/* Título — ocupa o meio */}
+        <col />
+        {/* Document version label */}
+        <col style={{ width: 95 }} />
+        {/* Document version value */}
+        <col style={{ width: 80 }} />
       </colgroup>
       <tbody>
-        <tr style={{ height: 50 }}>
-          <td style={{ ...c(WH, { textAlign: 'center', padding: 3 }), border: BDR }}>
+        {/* Linha 1: Logo | Título | Document version label | value */}
+        <tr style={{ height: 33 }}>
+          <td rowSpan={2} style={{ ...c(WH, { textAlign: 'center', padding: 3, verticalAlign: 'middle' }), border: BDR }}>
             {logo
               ? <img src={logo} alt="" style={{ maxHeight: 44, maxWidth: 82, objectFit: 'contain' }} />
-              : <span style={{ fontWeight: 900, fontSize: 11, color: BLUE }}>·faurecia</span>}
+              : <span style={{ fontWeight: 900, fontSize: 12, color: BLUE }}>·faurecia</span>}
           </td>
-          <td style={{ ...HD, fontSize: 14, fontWeight: 900 }}>{title}</td>
-          <td style={{ border: BDR, padding: 0, verticalAlign: 'top' }}>
-            <table style={{ ...T, height: 50 }}>
-              <tbody>
-                <tr style={{ height: 25 }}>
-                  <td style={{ ...LB, width: '55%' }}>Document version</td><td style={VL}>{ver}</td>
-                </tr>
-                <tr style={{ height: 25 }}>
-                  <td style={LB}>Date</td><td style={VL}>{date}</td>
-                </tr>
-              </tbody>
-            </table>
-          </td>
+          <td rowSpan={2} style={{ ...HD, fontSize: 14, fontWeight: 900, textAlign: 'center' }}>{title}</td>
+          <td style={LB}>Document version</td>
+          <td style={VL}>{ver}</td>
+        </tr>
+        {/* Linha 2: Date label | value */}
+        <tr style={{ height: 17 }}>
+          <td style={LB}>Date</td>
+          <td style={VL}>{date}</td>
         </tr>
       </tbody>
     </table>
