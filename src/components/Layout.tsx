@@ -33,7 +33,6 @@ export default function Layout() {
   return (
     <div className="flex h-screen bg-gray-100">
       <aside className="w-64 bg-slate-900 text-white flex flex-col shrink-0">
-        {/* Logo */}
         <div className="p-4 border-b border-slate-700">
           <div className="flex items-center gap-2">
             <Package className="w-7 h-7 text-cyan-400" />
@@ -44,16 +43,12 @@ export default function Layout() {
           </div>
         </div>
 
-        {/* Projeto ativo */}
         {activeProject && (
           <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/50">
             <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Projeto Ativo</p>
             <div className="flex items-center gap-2">
               {activeProject.imagemProduto && (
                 <img src={activeProject.imagemProduto} alt="" className="w-8 h-8 rounded object-cover" />
-              )}
-              {activeProject.imagemCliente && (
-                <img src={activeProject.imagemCliente} alt="" className="w-8 h-8 rounded object-cover" />
               )}
               <div className="min-w-0">
                 <p className="text-sm font-semibold truncate">{activeProject.projeto}</p>
@@ -63,7 +58,6 @@ export default function Layout() {
           </div>
         )}
 
-        {/* Nav */}
         <nav className="flex-1 py-2">
           {navItems.map((item) => (
             <NavLink
@@ -83,7 +77,6 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Rodapé */}
         <div className="p-3 border-t border-slate-700">
           <p className="text-[10px] text-slate-500 text-center">PackSys Industrial v1.0</p>
         </div>
